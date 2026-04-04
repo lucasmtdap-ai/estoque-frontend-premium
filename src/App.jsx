@@ -8,7 +8,9 @@ export default function App() {
   const [preco, setPreco] = useState("");
   const [busca, setBusca] = useState("");
   const [salvando, setSalvando] = useState(false);
-
+const filtrados = produtos.filter((p) =>
+  p.nome.toLowerCase().includes(busca.toLowerCase())
+);
   async function carregar() {
     try {
       const res = await fetch(API);
