@@ -8,7 +8,7 @@ export default function App() {
   const [preco, setPreco] = useState("");
   const [busca, setBusca] = useState("");
   const [salvando, setSalvando] = useState(false);
-
+const [mostrarForm, setMostrarForm] = useState(false);
   async function carregar() {
     try {
       const res = await fetch(API);
