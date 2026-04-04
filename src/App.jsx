@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 
 const API = "https://stock-backend-hp9t.onrender.com/produtos";
 
