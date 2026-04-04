@@ -1,37 +1,203 @@
 import React, { useEffect, useMemo, useState } from "react";
 
-const API = "https://stock-backend-hp9t.onrender.com/produtos";
+const API_BASE = "https://stock-backend-hp9t.onrender.com";
 
 export default function App() {
+  const [token, setToken] = useState(localStorage.getItem("token") || "");
+  const [user, setUser] = useState(() => {
+    const raw = localStorage.getItem("user");
+    return raw ? JSON.parse(raw) : null;
+  });
+
+  const [modoAuth, setModoAuth] = useState("login");
+  const [authForm, setAuthForm] = useState({
+    nome: "",
+    email: "",
+    senha: ""
+  });
+  const [authErro, setAuthErro] = useState("");
+  const [authCarregando, setAuthCarregando] = useState(false);
+
   const [produtos, setProdutos] = useState([]);
-  const [nome, setNome] = useState("");
-  const [preco, setPreco] = useState("");
   const [busca, setBusca] = useState("");
+  const [carregando, setCarregando] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
 
-  async function carregar() {
-    try {
-      setErro("");
-      const res = await fetch(API);
-      if (!res.ok) {
-        throw new Error("Falha ao carregar produtos");
+  const [modalAberto, setModalAberto] = useState(false);
+  const [modoEdicao, setModoEdicao] = useState(false);
+  const [produtoEditandoId, setProdutoEditandoId] = useState(null);
+
+  const [form, setForm] = useState({
+    nome: "",
+    preco: "",
+    categoria: "",
+    estoque: ""
+  });
+
+  const authHeader = token
+    ? {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
       }
+    : {
+        "Content-Type": "application/json"
+      };
+
+  async function carregarProdutos() {
+    if (!token) return;
+
+    try {
+      setCarregando(true);
+      setErro("");
+      const res = await fetch(`${API_BASE}/produtos`, {
+        headers: authHeader
+      });
+
+      if (!res.ok) {
+        throw new Error("Erro ao carregar produtos");
+      }
+
       const dados = await res.json();
       setProdutos(Array.isArray(dados) ? dados : []);
     } catch (e) {
       console.error(e);
       setErro("Erro ao carregar produtos.");
+    } finally {
+      setCarregando(false);
     }
   }
 
-  async function salvar(e) {
+  useEffect(() => {
+    if (token) {
+      carregarProdutos();
+    }
+  }, [token]);
+
+  function atualizarAuth(campo, valor) {
+    setAuthForm((prev) => ({ ...prev, [campo]: valor }));
+  }
+
+  async function enviarAuth(e) {
+    e.preventDefault();
+    setAuthErro("");
+
+    if (!authForm.email || !authForm.senha || (modoAuth === "register" && !authForm.nome)) {
+      setAuthErro("Preencha os campos obrigatórios.");
+      return;
+    }
+
+    try {
+      setAuthCarregando(true);
+
+      const endpoint = modoAuth === "login" ? "/login" : "/register";
+
+      const payload =
+        modoAuth === "login"
+          ? {
+              email: authForm.email,
+              senha: authForm.senha
+            }
+          : {
+              nome: authForm.nome,
+              email: authForm.email,
+              senha: authForm.senha
+            };
+
+      const res = await fetch(`${API_BASE}${endpoint}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const dados = await res.json();
+
+      if (!res.ok) {
+        throw new Error(dados.error || "Erro de autenticação");
+      }
+
+      localStorage.setItem("token", dados.token);
+      localStorage.setItem("user", JSON.stringify(dados.user));
+      setToken(dados.token);
+      setUser(dados.user);
+
+      setAuthForm({
+        nome: "",
+        email: "",
+        senha: ""
+      });
+    } catch (e) {
+      console.error(e);
+      setAuthErro(e.message || "Erro ao autenticar.");
+    } finally {
+      setAuthCarregando(false);
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setToken("");
+    setUser(null);
+    setProdutos([]);
+  }
+
+  function abrirNovoProduto() {
+    setModoEdicao(false);
+    setProdutoEditandoId(null);
+    setForm({
+      nome: "",
+      preco: "",
+      categoria: "",
+      estoque: ""
+    });
+    setErro("");
+    setSucesso("");
+    setModalAberto(true);
+  }
+
+  function abrirEdicao(produto) {
+    setModoEdicao(true);
+    setProdutoEditandoId(produto.id);
+    setForm({
+      nome: produto.nome || "",
+      preco: produto.preco ?? "",
+      categoria: produto.categoria || "",
+      estoque: produto.estoque ?? ""
+    });
+    setErro("");
+    setSucesso("");
+    setModalAberto(true);
+  }
+
+  function fecharModal() {
+    setModalAberto(false);
+    setModoEdicao(false);
+    setProdutoEditandoId(null);
+    setForm({
+      nome: "",
+      preco: "",
+      categoria: "",
+      estoque: ""
+    });
+  }
+
+  function atualizarCampo(campo, valor) {
+    setForm((prev) => ({
+      ...prev,
+      [campo]: valor
+    }));
+  }
+
+  async function salvarProduto(e) {
     e.preventDefault();
     setErro("");
     setSucesso("");
 
-    if (!nome.trim() || !preco) {
+    if (!form.nome.trim() || form.preco === "") {
       setErro("Preencha nome e preço.");
       return;
     }
@@ -39,329 +205,653 @@ export default function App() {
     try {
       setSalvando(true);
 
-      const res = await fetch(API, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          nome: nome.trim(),
-          preco: Number(preco),
-        }),
+      const payload = {
+        nome: form.nome.trim(),
+        preco: Number(form.preco),
+        categoria: form.categoria.trim(),
+        estoque: Number(form.estoque || 0)
+      };
+
+      const url = modoEdicao
+        ? `${API_BASE}/produtos/${produtoEditandoId}`
+        : `${API_BASE}/produtos`;
+
+      const metodo = modoEdicao ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method: metodo,
+        headers: authHeader,
+        body: JSON.stringify(payload)
       });
 
+      const dados = await res.json();
+
       if (!res.ok) {
-        throw new Error("Falha ao salvar produto");
+        throw new Error(dados.error || "Erro ao salvar produto");
       }
 
-      await res.json();
+      setSucesso(modoEdicao ? "Produto atualizado com sucesso." : "Produto criado com sucesso.");
+      await carregarProdutos();
 
-      setNome("");
-      setPreco("");
-      setSucesso("Produto salvo com sucesso.");
-      await carregar();
+      setTimeout(() => {
+        fecharModal();
+        setSucesso("");
+      }, 700);
     } catch (e) {
       console.error(e);
-      setErro("Erro ao salvar produto.");
+      setErro(e.message || "Erro ao salvar produto.");
     } finally {
       setSalvando(false);
     }
   }
 
-  useEffect(() => {
-    carregar();
-  }, []);
+  async function excluirProduto(id) {
+    const confirmar = window.confirm("Deseja excluir este produto?");
+    if (!confirmar) return;
 
-  const filtrados = useMemo(() => {
-    return produtos.filter((p) =>
-      (p.nome || "").toLowerCase().includes(busca.toLowerCase())
-    );
+    try {
+      setErro("");
+      const res = await fetch(`${API_BASE}/produtos/${id}`, {
+        method: "DELETE",
+        headers: authHeader
+      });
+
+      const dados = await res.json();
+
+      if (!res.ok) {
+        throw new Error(dados.error || "Erro ao excluir produto");
+      }
+
+      await carregarProdutos();
+    } catch (e) {
+      console.error(e);
+      setErro(e.message || "Erro ao excluir produto.");
+    }
+  }
+
+  const produtosFiltrados = useMemo(() => {
+    return produtos.filter((p) => {
+      const texto = busca.toLowerCase();
+      return (
+        (p.nome || "").toLowerCase().includes(texto) ||
+        (p.categoria || "").toLowerCase().includes(texto)
+      );
+    });
   }, [produtos, busca]);
 
-  const totalProdutos = filtrados.length;
-  const valorTotal = filtrados.reduce(
-    (acc, p) => acc + Number(p.preco || 0),
+  const totalProdutos = produtosFiltrados.length;
+  const valorTotal = produtosFiltrados.reduce(
+    (acc, p) => acc + Number(p.preco || 0) * Number(p.estoque || 0),
     0
   );
+  const estoqueBaixo = produtosFiltrados.filter(
+    (p) => Number(p.estoque || 0) <= 3
+  ).length;
 
-  const estilos = {
+  const s = {
     pagina: {
       minHeight: "100vh",
-      background: "linear-gradient(135deg, #f8fafc 0%, #eef2ff 50%, #f5f3ff 100%)",
-      padding: "32px 16px",
+      background:
+        "radial-gradient(circle at top left, #2a1a22 0%, #120d10 35%, #090909 100%)",
+      color: "#fff",
       fontFamily: "Arial, sans-serif",
-      boxSizing: "border-box",
+      padding: "24px",
+      boxSizing: "border-box"
     },
     container: {
-      maxWidth: "1120px",
-      margin: "0 auto",
+      maxWidth: "1360px",
+      margin: "0 auto"
+    },
+    card: {
+      background: "rgba(255,255,255,0.05)",
+      border: "1px solid rgba(212, 175, 55, 0.2)",
+      borderRadius: "20px",
+      boxShadow: "0 10px 30px rgba(0,0,0,0.22)",
+      backdropFilter: "blur(8px)"
+    },
+    authWrap: {
+      minHeight: "calc(100vh - 48px)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center"
+    },
+    authCard: {
+      width: "100%",
+      maxWidth: "460px",
+      padding: "28px"
     },
     titulo: {
       margin: 0,
-      fontSize: "48px",
-      lineHeight: 1.1,
-      color: "#111827",
-      fontWeight: "800",
+      fontSize: "36px",
+      fontWeight: "800"
     },
     subtitulo: {
       marginTop: "10px",
-      marginBottom: "24px",
-      color: "#6b7280",
-      fontSize: "18px",
+      color: "#d4af37",
+      fontSize: "15px"
     },
-    gridResumo: {
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-      gap: "16px",
-      marginBottom: "22px",
-    },
-    card: {
-      background: "#ffffff",
-      borderRadius: "20px",
-      border: "1px solid #e5e7eb",
-      boxShadow: "0 10px 30px rgba(15, 23, 42, 0.08)",
-    },
-    cardResumo: {
-      padding: "22px",
-    },
-    legendaResumo: {
-      color: "#6b7280",
-      fontSize: "15px",
-      marginBottom: "10px",
-    },
-    valorResumo: {
-      color: "#111827",
-      fontSize: "42px",
-      fontWeight: "800",
-      margin: 0,
-    },
-    gridPrincipal: {
-      display: "grid",
-      gridTemplateColumns: "360px 1fr",
-      gap: "20px",
-      alignItems: "start",
-    },
-    cardFormulario: {
-      padding: "22px",
-      position: "sticky",
-      top: "18px",
-    },
-    cardTabela: {
-      padding: "22px",
-    },
-    h2: {
-      marginTop: 0,
-      marginBottom: "18px",
-      color: "#111827",
-      fontSize: "22px",
+    grupo: {
+      marginBottom: "14px"
     },
     label: {
       display: "block",
       marginBottom: "8px",
-      color: "#374151",
       fontSize: "14px",
-      fontWeight: "700",
+      fontWeight: "700"
     },
     input: {
       width: "100%",
+      background: "rgba(255,255,255,0.06)",
+      color: "#fff",
+      border: "1px solid rgba(255,255,255,0.12)",
+      borderRadius: "14px",
       padding: "14px 16px",
-      borderRadius: "12px",
-      border: "1px solid #d1d5db",
-      fontSize: "16px",
+      fontSize: "15px",
       outline: "none",
-      boxSizing: "border-box",
-      background: "#fff",
+      boxSizing: "border-box"
     },
-    grupo: {
-      marginBottom: "16px",
-    },
-    botao: {
+    authButton: {
       width: "100%",
-      padding: "14px 18px",
-      borderRadius: "12px",
+      background: "linear-gradient(135deg, #d4af37 0%, #f7e7a9 100%)",
+      color: "#111",
       border: "none",
-      background: "#111827",
-      color: "#ffffff",
-      fontSize: "16px",
-      fontWeight: "700",
-      cursor: "pointer",
+      borderRadius: "14px",
+      padding: "14px 18px",
+      fontWeight: "800",
+      cursor: "pointer"
     },
-    topoTabela: {
+    trocaModo: {
+      marginTop: "16px",
+      textAlign: "center",
+      color: "#ddd",
+      fontSize: "14px"
+    },
+    linkModo: {
+      color: "#f7e7a9",
+      fontWeight: "700",
+      cursor: "pointer"
+    },
+    erro: {
+      marginBottom: "14px",
+      padding: "14px 16px",
+      borderRadius: "14px",
+      background: "rgba(239, 68, 68, 0.14)",
+      color: "#fecaca",
+      border: "1px solid rgba(239, 68, 68, 0.25)",
+      fontWeight: "700"
+    },
+    sucesso: {
+      marginBottom: "14px",
+      padding: "14px 16px",
+      borderRadius: "14px",
+      background: "rgba(34, 197, 94, 0.14)",
+      color: "#bbf7d0",
+      border: "1px solid rgba(34, 197, 94, 0.25)",
+      fontWeight: "700"
+    },
+    topo: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      gap: "16px",
+      flexWrap: "wrap",
+      marginBottom: "24px"
+    },
+    topoAcoes: {
+      display: "flex",
+      gap: "12px",
+      alignItems: "center",
+      flexWrap: "wrap"
+    },
+    botaoPrincipal: {
+      background: "linear-gradient(135deg, #d4af37 0%, #f7e7a9 100%)",
+      color: "#111",
+      border: "none",
+      borderRadius: "14px",
+      padding: "14px 20px",
+      fontSize: "15px",
+      fontWeight: "800",
+      cursor: "pointer"
+    },
+    botaoLogout: {
+      background: "rgba(255,255,255,0.08)",
+      color: "#fff",
+      border: "1px solid rgba(255,255,255,0.12)",
+      borderRadius: "14px",
+      padding: "14px 18px",
+      fontWeight: "700",
+      cursor: "pointer"
+    },
+    gradeCards: {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+      gap: "16px",
+      marginBottom: "22px"
+    },
+    resumoCard: {
+      padding: "20px"
+    },
+    resumoTitulo: {
+      fontSize: "14px",
+      color: "#d1d5db",
+      marginBottom: "10px"
+    },
+    resumoValor: {
+      fontSize: "32px",
+      fontWeight: "800",
+      margin: 0
+    },
+    blocoTabela: {
+      padding: "22px"
+    },
+    barraTabela: {
       display: "flex",
       justifyContent: "space-between",
       alignItems: "center",
       gap: "14px",
       flexWrap: "wrap",
-      marginBottom: "16px",
+      marginBottom: "18px"
     },
-    descricao: {
-      margin: "6px 0 0",
-      color: "#6b7280",
-      fontSize: "14px",
-    },
-    caixaBusca: {
-      minWidth: "260px",
-      maxWidth: "320px",
-      flex: 1,
+    inputBusca: {
+      minWidth: "280px",
+      background: "rgba(255,255,255,0.08)",
+      color: "#fff",
+      border: "1px solid rgba(255,255,255,0.12)",
+      borderRadius: "14px",
+      padding: "14px 16px",
+      fontSize: "15px",
+      outline: "none"
     },
     tabelaWrap: {
-      overflowX: "auto",
+      overflowX: "auto"
     },
     tabela: {
       width: "100%",
       borderCollapse: "collapse",
-      minWidth: "520px",
+      minWidth: "920px"
     },
     th: {
       textAlign: "left",
       padding: "14px",
-      borderBottom: "1px solid #e5e7eb",
-      color: "#374151",
-      fontSize: "14px",
-      background: "#f9fafb",
+      color: "#d4af37",
+      borderBottom: "1px solid rgba(255,255,255,0.08)",
+      fontSize: "13px",
+      textTransform: "uppercase"
     },
-    tdNome: {
-      padding: "14px",
-      borderBottom: "1px solid #f1f5f9",
-      color: "#111827",
-      fontWeight: "600",
-      fontSize: "15px",
+    td: {
+      padding: "16px 14px",
+      borderBottom: "1px solid rgba(255,255,255,0.06)",
+      color: "#f3f4f6",
+      fontSize: "15px"
     },
-    tdPreco: {
-      padding: "14px",
-      borderBottom: "1px solid #f1f5f9",
-      color: "#059669",
-      fontWeight: "700",
-      fontSize: "15px",
+    badge: {
+      display: "inline-block",
+      padding: "8px 12px",
+      borderRadius: "999px",
+      background: "rgba(212, 175, 55, 0.14)",
+      color: "#f7e7a9",
+      fontSize: "13px",
+      fontWeight: "700"
+    },
+    estoqueBadge: (baixo) => ({
+      display: "inline-block",
+      padding: "8px 12px",
+      borderRadius: "999px",
+      background: baixo ? "rgba(239, 68, 68, 0.18)" : "rgba(34, 197, 94, 0.18)",
+      color: baixo ? "#fca5a5" : "#86efac",
+      fontSize: "13px",
+      fontWeight: "700"
+    }),
+    acoes: {
+      display: "flex",
+      gap: "10px",
+      flexWrap: "wrap"
+    },
+    botaoEditar: {
+      background: "rgba(255,255,255,0.08)",
+      color: "#fff",
+      border: "1px solid rgba(255,255,255,0.12)",
+      borderRadius: "12px",
+      padding: "10px 14px",
+      cursor: "pointer",
+      fontWeight: "700"
+    },
+    botaoExcluir: {
+      background: "rgba(239, 68, 68, 0.16)",
+      color: "#fecaca",
+      border: "1px solid rgba(239, 68, 68, 0.25)",
+      borderRadius: "12px",
+      padding: "10px 14px",
+      cursor: "pointer",
+      fontWeight: "700"
     },
     vazio: {
-      padding: "32px",
-      border: "1px dashed #d1d5db",
-      borderRadius: "14px",
+      padding: "30px",
       textAlign: "center",
-      color: "#6b7280",
+      color: "#d1d5db",
+      border: "1px dashed rgba(255,255,255,0.15)",
+      borderRadius: "16px",
+      marginTop: "12px"
     },
-    alertaErro: {
-      marginBottom: "14px",
-      padding: "12px 14px",
+    modalOverlay: {
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.65)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "20px",
+      zIndex: 9999
+    },
+    modal: {
+      width: "100%",
+      maxWidth: "560px",
+      background: "#111111",
+      border: "1px solid rgba(212, 175, 55, 0.22)",
+      borderRadius: "24px",
+      padding: "24px",
+      boxShadow: "0 20px 50px rgba(0,0,0,0.45)"
+    },
+    modalTopo: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: "18px"
+    },
+    fechar: {
+      background: "transparent",
+      border: "1px solid rgba(255,255,255,0.12)",
+      color: "#fff",
+      width: "38px",
+      height: "38px",
       borderRadius: "12px",
-      background: "#fef2f2",
-      color: "#991b1b",
-      border: "1px solid #fecaca",
-      fontSize: "14px",
-      fontWeight: "600",
+      cursor: "pointer",
+      fontSize: "18px",
+      fontWeight: "700"
     },
-    alertaSucesso: {
-      marginBottom: "14px",
-      padding: "12px 14px",
-      borderRadius: "12px",
-      background: "#ecfdf5",
-      color: "#065f46",
-      border: "1px solid #a7f3d0",
-      fontSize: "14px",
-      fontWeight: "600",
+    gridForm: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: "14px"
     },
+    grupoFull: {
+      gridColumn: "1 / -1"
+    },
+    botoesModal: {
+      display: "flex",
+      justifyContent: "flex-end",
+      gap: "12px",
+      marginTop: "18px",
+      flexWrap: "wrap"
+    }
   };
 
-  return (
-    <div style={estilos.pagina}>
-      <div style={estilos.container}>
-        <h1 style={estilos.titulo}>Rosa Boutique</h1>
-        <p style={estilos.subtitulo}>
-          Painel simples de estoque conectado ao seu backend
-        </p>
+  if (!token || !user) {
+    return (
+      <div style={s.pagina}>
+        <div style={s.container}>
+          <div style={s.authWrap}>
+            <div style={{ ...s.card, ...s.authCard }}>
+              <h1 style={s.titulo}>Rosa Boutique</h1>
+              <div style={s.subtitulo}>SaaS premium com login</div>
 
-        <div style={estilos.gridResumo}>
-          <div style={{ ...estilos.card, ...estilos.cardResumo }}>
-            <div style={estilos.legendaResumo}>Total de produtos</div>
-            <p style={estilos.valorResumo}>{totalProdutos}</p>
+              <div style={{ marginTop: "22px", marginBottom: "18px", fontWeight: "800", fontSize: "24px" }}>
+                {modoAuth === "login" ? "Entrar" : "Criar conta"}
+              </div>
+
+              {authErro ? <div style={s.erro}>{authErro}</div> : null}
+
+              <form onSubmit={enviarAuth}>
+                {modoAuth === "register" && (
+                  <div style={s.grupo}>
+                    <label style={s.label}>Nome</label>
+                    <input
+                      style={s.input}
+                      value={authForm.nome}
+                      onChange={(e) => atualizarAuth("nome", e.target.value)}
+                      placeholder="Seu nome"
+                    />
+                  </div>
+                )}
+
+                <div style={s.grupo}>
+                  <label style={s.label}>Email</label>
+                  <input
+                    style={s.input}
+                    value={authForm.email}
+                    onChange={(e) => atualizarAuth("email", e.target.value)}
+                    placeholder="seuemail@gmail.com"
+                  />
+                </div>
+
+                <div style={s.grupo}>
+                  <label style={s.label}>Senha</label>
+                  <input
+                    style={s.input}
+                    type="password"
+                    value={authForm.senha}
+                    onChange={(e) => atualizarAuth("senha", e.target.value)}
+                    placeholder="Sua senha"
+                  />
+                </div>
+
+                <button type="submit" style={s.authButton} disabled={authCarregando}>
+                  {authCarregando
+                    ? "Carregando..."
+                    : modoAuth === "login"
+                    ? "Entrar"
+                    : "Criar conta"}
+                </button>
+              </form>
+
+              <div style={s.trocaModo}>
+                {modoAuth === "login" ? (
+                  <>
+                    Não tem conta?{" "}
+                    <span style={s.linkModo} onClick={() => setModoAuth("register")}>
+                      Criar agora
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    Já tem conta?{" "}
+                    <span style={s.linkModo} onClick={() => setModoAuth("login")}>
+                      Fazer login
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={s.pagina}>
+      <div style={s.container}>
+        <div style={s.topo}>
+          <div>
+            <h1 style={s.titulo}>Rosa Boutique</h1>
+            <div style={s.subtitulo}>
+              Bem-vindo, {user.nome} • SaaS premium de gestão de estoque
+            </div>
           </div>
 
-          <div style={{ ...estilos.card, ...estilos.cardResumo }}>
-            <div style={estilos.legendaResumo}>Valor total</div>
-            <p style={estilos.valorResumo}>R$ {valorTotal.toFixed(2)}</p>
+          <div style={s.topoAcoes}>
+            <button style={s.botaoPrincipal} onClick={abrirNovoProduto}>
+              + Novo Produto
+            </button>
+            <button style={s.botaoLogout} onClick={logout}>
+              Sair
+            </button>
           </div>
         </div>
 
-        <div style={estilos.gridPrincipal}>
-          <div style={{ ...estilos.card, ...estilos.cardFormulario }}>
-            <h2 style={estilos.h2}>Novo produto</h2>
+        {erro ? <div style={s.erro}>{erro}</div> : null}
 
-            {erro ? <div style={estilos.alertaErro}>{erro}</div> : null}
-            {sucesso ? <div style={estilos.alertaSucesso}>{sucesso}</div> : null}
-
-            <form onSubmit={salvar}>
-              <div style={estilos.grupo}>
-                <label style={estilos.label}>Nome do produto</label>
-                <input
-                  style={estilos.input}
-                  placeholder="Ex: Camisa básica"
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                />
-              </div>
-
-              <div style={estilos.grupo}>
-                <label style={estilos.label}>Preço</label>
-                <input
-                  style={estilos.input}
-                  placeholder="Ex: 39.90"
-                  type="number"
-                  step="0.01"
-                  value={preco}
-                  onChange={(e) => setPreco(e.target.value)}
-                />
-              </div>
-
-              <button type="submit" style={estilos.botao} disabled={salvando}>
-                {salvando ? "Salvando..." : "Salvar produto"}
-              </button>
-            </form>
+        <div style={s.gradeCards}>
+          <div style={{ ...s.card, ...s.resumoCard }}>
+            <div style={s.resumoTitulo}>Total de produtos</div>
+            <p style={s.resumoValor}>{totalProdutos}</p>
           </div>
 
-          <div style={{ ...estilos.card, ...estilos.cardTabela }}>
-            <div style={estilos.topoTabela}>
-              <div>
-                <h2 style={estilos.h2}>Produtos cadastrados</h2>
-                <p style={estilos.descricao}>Lista atual do estoque</p>
-              </div>
+          <div style={{ ...s.card, ...s.resumoCard }}>
+            <div style={s.resumoTitulo}>Valor total em estoque</div>
+            <p style={s.resumoValor}>R$ {valorTotal.toFixed(2)}</p>
+          </div>
 
-              <div style={estilos.caixaBusca}>
-                <input
-                  style={estilos.input}
-                  placeholder="Buscar produto..."
-                  value={busca}
-                  onChange={(e) => setBusca(e.target.value)}
-                />
+          <div style={{ ...s.card, ...s.resumoCard }}>
+            <div style={s.resumoTitulo}>Alerta de estoque baixo</div>
+            <p style={s.resumoValor}>{estoqueBaixo}</p>
+          </div>
+        </div>
+
+        <div style={{ ...s.card, ...s.blocoTabela }}>
+          <div style={s.barraTabela}>
+            <div>
+              <div style={{ fontSize: "24px", fontWeight: "800" }}>Produtos cadastrados</div>
+              <div style={{ marginTop: "6px", color: "#d1d5db", fontSize: "14px" }}>
+                Gerencie produtos, estoque e categorias
               </div>
             </div>
 
-            {filtrados.length === 0 ? (
-              <div style={estilos.vazio}>Nenhum produto encontrado.</div>
-            ) : (
-              <div style={estilos.tabelaWrap}>
-                <table style={estilos.tabela}>
-                  <thead>
-                    <tr>
-                      <th style={estilos.th}>Produto</th>
-                      <th style={estilos.th}>Preço</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtrados.map((p, i) => (
-                      <tr key={i}>
-                        <td style={estilos.tdNome}>{p.nome}</td>
-                        <td style={estilos.tdPreco}>
-                          R$ {Number(p.preco || 0).toFixed(2)}
+            <input
+              style={s.inputBusca}
+              placeholder="Buscar por nome ou categoria..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+            />
+          </div>
+
+          {carregando ? (
+            <div style={s.vazio}>Carregando produtos...</div>
+          ) : produtosFiltrados.length === 0 ? (
+            <div style={s.vazio}>Nenhum produto encontrado.</div>
+          ) : (
+            <div style={s.tabelaWrap}>
+              <table style={s.tabela}>
+                <thead>
+                  <tr>
+                    <th style={s.th}>Produto</th>
+                    <th style={s.th}>Categoria</th>
+                    <th style={s.th}>Preço</th>
+                    <th style={s.th}>Estoque</th>
+                    <th style={s.th}>Valor total</th>
+                    <th style={s.th}>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {produtosFiltrados.map((p) => {
+                    const baixo = Number(p.estoque || 0) <= 3;
+                    const total = Number(p.preco || 0) * Number(p.estoque || 0);
+
+                    return (
+                      <tr key={p.id}>
+                        <td style={s.td}>{p.nome}</td>
+                        <td style={s.td}>
+                          <span style={s.badge}>{p.categoria || "Sem categoria"}</span>
+                        </td>
+                        <td style={s.td}>R$ {Number(p.preco || 0).toFixed(2)}</td>
+                        <td style={s.td}>
+                          <span style={s.estoqueBadge(baixo)}>
+                            {Number(p.estoque || 0)} {baixo ? "• Baixo" : "• OK"}
+                          </span>
+                        </td>
+                        <td style={s.td}>R$ {total.toFixed(2)}</td>
+                        <td style={s.td}>
+                          <div style={s.acoes}>
+                            <button style={s.botaoEditar} onClick={() => abrirEdicao(p)}>
+                              Editar
+                            </button>
+                            <button style={s.botaoExcluir} onClick={() => excluirProduto(p.id)}>
+                              Excluir
+                            </button>
+                          </div>
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
+
+        {modalAberto && (
+          <div style={s.modalOverlay}>
+            <div style={s.modal}>
+              <div style={s.modalTopo}>
+                <h3 style={{ margin: 0, fontSize: "24px", fontWeight: "800" }}>
+                  {modoEdicao ? "Editar produto" : "Novo produto"}
+                </h3>
+                <button style={s.fechar} onClick={fecharModal}>
+                  ×
+                </button>
+              </div>
+
+              {erro ? <div style={s.erro}>{erro}</div> : null}
+              {sucesso ? <div style={s.sucesso}>{sucesso}</div> : null}
+
+              <form onSubmit={salvarProduto}>
+                <div style={s.gridForm}>
+                  <div style={{ ...s.grupo, ...s.grupoFull }}>
+                    <label style={s.label}>Nome do produto</label>
+                    <input
+                      style={s.input}
+                      value={form.nome}
+                      onChange={(e) => atualizarCampo("nome", e.target.value)}
+                    />
+                  </div>
+
+                  <div style={s.grupo}>
+                    <label style={s.label}>Preço</label>
+                    <input
+                      style={s.input}
+                      type="number"
+                      step="0.01"
+                      value={form.preco}
+                      onChange={(e) => atualizarCampo("preco", e.target.value)}
+                    />
+                  </div>
+
+                  <div style={s.grupo}>
+                    <label style={s.label}>Estoque</label>
+                    <input
+                      style={s.input}
+                      type="number"
+                      value={form.estoque}
+                      onChange={(e) => atualizarCampo("estoque", e.target.value)}
+                    />
+                  </div>
+
+                  <div style={{ ...s.grupo, ...s.grupoFull }}>
+                    <label style={s.label}>Categoria</label>
+                    <input
+                      style={s.input}
+                      value={form.categoria}
+                      onChange={(e) => atualizarCampo("categoria", e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div style={s.botoesModal}>
+                  <button type="button" style={s.botaoLogout} onClick={fecharModal}>
+                    Cancelar
+                  </button>
+                  <button type="submit" style={s.botaoPrincipal} disabled={salvando}>
+                    {salvando
+                      ? "Salvando..."
+                      : modoEdicao
+                      ? "Salvar alterações"
+                      : "Criar produto"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
