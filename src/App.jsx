@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 const API = "https://stock-backend-hp9t.onrender.com/produtos";
 
@@ -8,23 +8,31 @@ export default function App() {
   const [preco, setPreco] = useState("");
   const [busca, setBusca] = useState("");
   const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState("");
+  const [sucesso, setSucesso] = useState("");
 
   async function carregar() {
     try {
+      setErro("");
       const res = await fetch(API);
+      if (!res.ok) {
+        throw new Error("Falha ao carregar produtos");
+      }
       const dados = await res.json();
       setProdutos(Array.isArray(dados) ? dados : []);
     } catch (e) {
       console.error(e);
-      alert("Erro ao carregar produtos.");
+      setErro("Erro ao carregar produtos.");
     }
   }
 
   async function salvar(e) {
     e.preventDefault();
+    setErro("");
+    setSucesso("");
 
-    if (!nome || !preco) {
-      alert("Preencha nome e preço.");
+    if (!nome.trim() || !preco) {
+      setErro("Preencha nome e preço.");
       return;
     }
 
@@ -37,19 +45,24 @@ export default function App() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          nome,
+          nome: nome.trim(),
           preco: Number(preco),
         }),
       });
+
+      if (!res.ok) {
+        throw new Error("Falha ao salvar produto");
+      }
 
       await res.json();
 
       setNome("");
       setPreco("");
+      setSucesso("Produto salvo com sucesso.");
       await carregar();
     } catch (e) {
       console.error(e);
-      alert("Erro ao salvar produto.");
+      setErro("Erro ao salvar produto.");
     } finally {
       setSalvando(false);
     }
@@ -71,276 +84,274 @@ export default function App() {
     0
   );
 
-  const card = {
-    background: "#ffffff",
-    borderRadius: "18px",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-    border: "1px solid #e5e7eb",
-  };
-
-  const input = {
-    width: "100%",
-    padding: "14px 16px",
-    borderRadius: "12px",
-    border: "1px solid #d1d5db",
-    fontSize: "16px",
-    outline: "none",
-    boxSizing: "border-box",
-  };
-
-  const label = {
-    fontSize: "14px",
-    fontWeight: "600",
-    color: "#374151",
-    marginBottom: "6px",
-    display: "block",
-  };
-
-  const botao = {
-    background: "#111827",
-    color: "#fff",
-    border: "none",
-    borderRadius: "12px",
-    padding: "14px 18px",
-    fontSize: "16px",
-    fontWeight: "700",
-    cursor: "pointer",
-    width: "100%",
+  const estilos = {
+    pagina: {
+      minHeight: "100vh",
+      background: "linear-gradient(135deg, #f8fafc 0%, #eef2ff 50%, #f5f3ff 100%)",
+      padding: "32px 16px",
+      fontFamily: "Arial, sans-serif",
+      boxSizing: "border-box",
+    },
+    container: {
+      maxWidth: "1120px",
+      margin: "0 auto",
+    },
+    titulo: {
+      margin: 0,
+      fontSize: "48px",
+      lineHeight: 1.1,
+      color: "#111827",
+      fontWeight: "800",
+    },
+    subtitulo: {
+      marginTop: "10px",
+      marginBottom: "24px",
+      color: "#6b7280",
+      fontSize: "18px",
+    },
+    gridResumo: {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+      gap: "16px",
+      marginBottom: "22px",
+    },
+    card: {
+      background: "#ffffff",
+      borderRadius: "20px",
+      border: "1px solid #e5e7eb",
+      boxShadow: "0 10px 30px rgba(15, 23, 42, 0.08)",
+    },
+    cardResumo: {
+      padding: "22px",
+    },
+    legendaResumo: {
+      color: "#6b7280",
+      fontSize: "15px",
+      marginBottom: "10px",
+    },
+    valorResumo: {
+      color: "#111827",
+      fontSize: "42px",
+      fontWeight: "800",
+      margin: 0,
+    },
+    gridPrincipal: {
+      display: "grid",
+      gridTemplateColumns: "360px 1fr",
+      gap: "20px",
+      alignItems: "start",
+    },
+    cardFormulario: {
+      padding: "22px",
+      position: "sticky",
+      top: "18px",
+    },
+    cardTabela: {
+      padding: "22px",
+    },
+    h2: {
+      marginTop: 0,
+      marginBottom: "18px",
+      color: "#111827",
+      fontSize: "22px",
+    },
+    label: {
+      display: "block",
+      marginBottom: "8px",
+      color: "#374151",
+      fontSize: "14px",
+      fontWeight: "700",
+    },
+    input: {
+      width: "100%",
+      padding: "14px 16px",
+      borderRadius: "12px",
+      border: "1px solid #d1d5db",
+      fontSize: "16px",
+      outline: "none",
+      boxSizing: "border-box",
+      background: "#fff",
+    },
+    grupo: {
+      marginBottom: "16px",
+    },
+    botao: {
+      width: "100%",
+      padding: "14px 18px",
+      borderRadius: "12px",
+      border: "none",
+      background: "#111827",
+      color: "#ffffff",
+      fontSize: "16px",
+      fontWeight: "700",
+      cursor: "pointer",
+    },
+    topoTabela: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      gap: "14px",
+      flexWrap: "wrap",
+      marginBottom: "16px",
+    },
+    descricao: {
+      margin: "6px 0 0",
+      color: "#6b7280",
+      fontSize: "14px",
+    },
+    caixaBusca: {
+      minWidth: "260px",
+      maxWidth: "320px",
+      flex: 1,
+    },
+    tabelaWrap: {
+      overflowX: "auto",
+    },
+    tabela: {
+      width: "100%",
+      borderCollapse: "collapse",
+      minWidth: "520px",
+    },
+    th: {
+      textAlign: "left",
+      padding: "14px",
+      borderBottom: "1px solid #e5e7eb",
+      color: "#374151",
+      fontSize: "14px",
+      background: "#f9fafb",
+    },
+    tdNome: {
+      padding: "14px",
+      borderBottom: "1px solid #f1f5f9",
+      color: "#111827",
+      fontWeight: "600",
+      fontSize: "15px",
+    },
+    tdPreco: {
+      padding: "14px",
+      borderBottom: "1px solid #f1f5f9",
+      color: "#059669",
+      fontWeight: "700",
+      fontSize: "15px",
+    },
+    vazio: {
+      padding: "32px",
+      border: "1px dashed #d1d5db",
+      borderRadius: "14px",
+      textAlign: "center",
+      color: "#6b7280",
+    },
+    alertaErro: {
+      marginBottom: "14px",
+      padding: "12px 14px",
+      borderRadius: "12px",
+      background: "#fef2f2",
+      color: "#991b1b",
+      border: "1px solid #fecaca",
+      fontSize: "14px",
+      fontWeight: "600",
+    },
+    alertaSucesso: {
+      marginBottom: "14px",
+      padding: "12px 14px",
+      borderRadius: "12px",
+      background: "#ecfdf5",
+      color: "#065f46",
+      border: "1px solid #a7f3d0",
+      fontSize: "14px",
+      fontWeight: "600",
+    },
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background:
-          "linear-gradient(135deg, #f9fafb 0%, #eef2ff 50%, #f5f3ff 100%)",
-        padding: "30px 16px",
-        fontFamily: "Arial, sans-serif",
-        boxSizing: "border-box",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "1100px",
-          margin: "0 auto",
-        }}
-      >
-        <div style={{ marginBottom: "24px" }}>
-          <h1
-            style={{
-              margin: 0,
-              fontSize: "42px",
-              color: "#111827",
-            }}
-          >
-            Rosa Boutique
-          </h1>
-          <p
-            style={{
-              marginTop: "8px",
-              color: "#6b7280",
-              fontSize: "16px",
-            }}
-          >
-            Painel simples de estoque conectado ao seu backend
-          </p>
-        </div>
+    <div style={estilos.pagina}>
+      <div style={estilos.container}>
+        <h1 style={estilos.titulo}>Rosa Boutique</h1>
+        <p style={estilos.subtitulo}>
+          Painel simples de estoque conectado ao seu backend
+        </p>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: "16px",
-            marginBottom: "24px",
-          }}
-        >
-          <div style={{ ...card, padding: "18px" }}>
-            <div style={{ color: "#6b7280", fontSize: "14px" }}>
-              Total de produtos
-            </div>
-            <div
-              style={{
-                marginTop: "8px",
-                fontSize: "30px",
-                fontWeight: "700",
-                color: "#111827",
-              }}
-            >
-              {totalProdutos}
-            </div>
+        <div style={estilos.gridResumo}>
+          <div style={{ ...estilos.card, ...estilos.cardResumo }}>
+            <div style={estilos.legendaResumo}>Total de produtos</div>
+            <p style={estilos.valorResumo}>{totalProdutos}</p>
           </div>
 
-          <div style={{ ...card, padding: "18px" }}>
-            <div style={{ color: "#6b7280", fontSize: "14px" }}>
-              Valor total
-            </div>
-            <div
-              style={{
-                marginTop: "8px",
-                fontSize: "30px",
-                fontWeight: "700",
-                color: "#111827",
-              }}
-            >
-              R$ {valorTotal.toFixed(2)}
-            </div>
+          <div style={{ ...estilos.card, ...estilos.cardResumo }}>
+            <div style={estilos.legendaResumo}>Valor total</div>
+            <p style={estilos.valorResumo}>R$ {valorTotal.toFixed(2)}</p>
           </div>
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "360px 1fr",
-            gap: "20px",
-          }}
-        >
-          <div style={{ ...card, padding: "20px", height: "fit-content" }}>
-            <h2
-              style={{
-                marginTop: 0,
-                marginBottom: "18px",
-                color: "#111827",
-              }}
-            >
-              Novo produto
-            </h2>
+        <div style={estilos.gridPrincipal}>
+          <div style={{ ...estilos.card, ...estilos.cardFormulario }}>
+            <h2 style={estilos.h2}>Novo produto</h2>
+
+            {erro ? <div style={estilos.alertaErro}>{erro}</div> : null}
+            {sucesso ? <div style={estilos.alertaSucesso}>{sucesso}</div> : null}
 
             <form onSubmit={salvar}>
-              <div style={{ marginBottom: "14px" }}>
-                <label style={label}>Nome do produto</label>
+              <div style={estilos.grupo}>
+                <label style={estilos.label}>Nome do produto</label>
                 <input
+                  style={estilos.input}
                   placeholder="Ex: Camisa básica"
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
-                  style={input}
                 />
               </div>
 
-              <div style={{ marginBottom: "18px" }}>
-                <label style={label}>Preço</label>
+              <div style={estilos.grupo}>
+                <label style={estilos.label}>Preço</label>
                 <input
+                  style={estilos.input}
                   placeholder="Ex: 39.90"
                   type="number"
                   step="0.01"
                   value={preco}
                   onChange={(e) => setPreco(e.target.value)}
-                  style={input}
                 />
               </div>
 
-              <button type="submit" style={botao} disabled={salvando}>
+              <button type="submit" style={estilos.botao} disabled={salvando}>
                 {salvando ? "Salvando..." : "Salvar produto"}
               </button>
             </form>
           </div>
 
-          <div style={{ ...card, padding: "20px" }}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: "12px",
-                flexWrap: "wrap",
-                marginBottom: "18px",
-              }}
-            >
+          <div style={{ ...estilos.card, ...estilos.cardTabela }}>
+            <div style={estilos.topoTabela}>
               <div>
-                <h2
-                  style={{
-                    margin: 0,
-                    color: "#111827",
-                  }}
-                >
-                  Produtos cadastrados
-                </h2>
-                <p
-                  style={{
-                    margin: "6px 0 0",
-                    color: "#6b7280",
-                    fontSize: "14px",
-                  }}
-                >
-                  Lista atual do estoque
-                </p>
+                <h2 style={estilos.h2}>Produtos cadastrados</h2>
+                <p style={estilos.descricao}>Lista atual do estoque</p>
               </div>
 
-              <div style={{ minWidth: "260px", flex: 1, maxWidth: "320px" }}>
+              <div style={estilos.caixaBusca}>
                 <input
+                  style={estilos.input}
                   placeholder="Buscar produto..."
                   value={busca}
                   onChange={(e) => setBusca(e.target.value)}
-                  style={input}
                 />
               </div>
             </div>
 
             {filtrados.length === 0 ? (
-              <div
-                style={{
-                  padding: "30px",
-                  textAlign: "center",
-                  color: "#6b7280",
-                  border: "1px dashed #d1d5db",
-                  borderRadius: "14px",
-                }}
-              >
-                Nenhum produto encontrado.
-              </div>
+              <div style={estilos.vazio}>Nenhum produto encontrado.</div>
             ) : (
-              <div style={{ overflowX: "auto" }}>
-                <table
-                  style={{
-                    width: "100%",
-                    borderCollapse: "collapse",
-                    minWidth: "500px",
-                  }}
-                >
+              <div style={estilos.tabelaWrap}>
+                <table style={estilos.tabela}>
                   <thead>
-                    <tr style={{ background: "#f9fafb" }}>
-                      <th
-                        style={{
-                          textAlign: "left",
-                          padding: "14px",
-                          borderBottom: "1px solid #e5e7eb",
-                          color: "#374151",
-                        }}
-                      >
-                        Produto
-                      </th>
-                      <th
-                        style={{
-                          textAlign: "left",
-                          padding: "14px",
-                          borderBottom: "1px solid #e5e7eb",
-                          color: "#374151",
-                        }}
-                      >
-                        Preço
-                      </th>
+                    <tr>
+                      <th style={estilos.th}>Produto</th>
+                      <th style={estilos.th}>Preço</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filtrados.map((p, i) => (
                       <tr key={i}>
-                        <td
-                          style={{
-                            padding: "14px",
-                            borderBottom: "1px solid #f1f5f9",
-                            color: "#111827",
-                            fontWeight: "600",
-                          }}
-                        >
-                          {p.nome}
-                        </td>
-                        <td
-                          style={{
-                            padding: "14px",
-                            borderBottom: "1px solid #f1f5f9",
-                            color: "#059669",
-                            fontWeight: "700",
-                          }}
-                        >
+                        <td style={estilos.tdNome}>{p.nome}</td>
+                        <td style={estilos.tdPreco}>
                           R$ {Number(p.preco || 0).toFixed(2)}
                         </td>
                       </tr>
