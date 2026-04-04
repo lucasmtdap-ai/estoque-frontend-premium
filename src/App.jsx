@@ -8,9 +8,7 @@ export default function App() {
   const [preco, setPreco] = useState("");
   const [busca, setBusca] = useState("");
   const [salvando, setSalvando] = useState(false);
-const filtrados = produtos.filter((p) =>
-  p.nome.toLowerCase().includes(busca.toLowerCase())
-);
+
   async function carregar() {
     try {
       const res = await fetch(API);
@@ -277,78 +275,83 @@ const filtrados = produtos.filter((p) =>
               </div>
             </div>
 
-           {filtrados.length === 0 ? (
-  <div
-    style={{
-      padding: "30px",
-      textAlign: "center",
-      color: "#6b7280",
-      border: "1px dashed #d1d5db",
-      borderRadius: "14px",
-      marginTop: "20px",
-    }}
-  >
-    Nenhum produto encontrado.
-  </div>
-) : (
-  <div style={{ overflowX: "auto", marginTop: "20px" }}>
-    <table
-      style={{
-        width: "100%",
-        borderCollapse: "collapse",
-        minWidth: "500px",
-      }}
-    >
-      <thead>
-        <tr style={{ background: "#f9fafb" }}>
-          <th
-            style={{
-              textAlign: "left",
-              padding: "14px",
-              borderBottom: "1px solid #e5e7eb",
-              color: "#374151",
-            }}
-          >
-            Produto
-          </th>
-          <th
-            style={{
-              textAlign: "left",
-              padding: "14px",
-              borderBottom: "1px solid #e5e7eb",
-              color: "#374151",
-            }}
-          >
-            Preço
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {filtrados.map((p, i) => (
-          <tr key={i}>
-            <td
-              style={{
-                padding: "14px",
-                borderBottom: "1px solid #f1f5f9",
-                color: "#111827",
-                fontWeight: "600",
-              }}
-            >
-              {p.nome}
-            </td>
-            <td
-              style={{
-                padding: "14px",
-                borderBottom: "1px solid #f1f5f9",
-                color: "#059669",
-                fontWeight: "700",
-              }}
-            >
-              R$ {Number(p.preco || 0).toFixed(2)}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-)}
+            {filtrados.length === 0 ? (
+              <div
+                style={{
+                  padding: "30px",
+                  textAlign: "center",
+                  color: "#6b7280",
+                  border: "1px dashed #d1d5db",
+                  borderRadius: "14px",
+                }}
+              >
+                Nenhum produto encontrado.
+              </div>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table
+                  style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    minWidth: "500px",
+                  }}
+                >
+                  <thead>
+                    <tr style={{ background: "#f9fafb" }}>
+                      <th
+                        style={{
+                          textAlign: "left",
+                          padding: "14px",
+                          borderBottom: "1px solid #e5e7eb",
+                          color: "#374151",
+                        }}
+                      >
+                        Produto
+                      </th>
+                      <th
+                        style={{
+                          textAlign: "left",
+                          padding: "14px",
+                          borderBottom: "1px solid #e5e7eb",
+                          color: "#374151",
+                        }}
+                      >
+                        Preço
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtrados.map((p, i) => (
+                      <tr key={i}>
+                        <td
+                          style={{
+                            padding: "14px",
+                            borderBottom: "1px solid #f1f5f9",
+                            color: "#111827",
+                            fontWeight: "600",
+                          }}
+                        >
+                          {p.nome}
+                        </td>
+                        <td
+                          style={{
+                            padding: "14px",
+                            borderBottom: "1px solid #f1f5f9",
+                            color: "#059669",
+                            fontWeight: "700",
+                          }}
+                        >
+                          R$ {Number(p.preco || 0).toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
