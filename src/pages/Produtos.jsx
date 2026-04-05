@@ -47,11 +47,11 @@ export default function Produtos() {
       setCarregando(true);
 
       const payload = {
-        nome,
-        preco: Number(preco || 0),
-        categoria,
-        estoque: Number(estoque || 0)
-      };
+  nome,
+  preco: Number(preco || 0),
+  categoria: categoria || "",
+  estoque: Number(estoque || 0)
+};
 
       if (editandoId) {
         await api.put(`/produtos/${editandoId}`, payload);
