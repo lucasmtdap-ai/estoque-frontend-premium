@@ -43,7 +43,7 @@ export default function Register() {
         <h1>Rosa Boutique</h1>
         <p className="auth-subtitle">Crie sua conta</p>
 
-        {erro ? <div className="alert alert-error">{erro}</div> : null}
+        {erro ? <p style={{ color: "red" }}>{erro}</p> : null}
 
         <form onSubmit={handleSubmit} className="auth-form">
           <input
