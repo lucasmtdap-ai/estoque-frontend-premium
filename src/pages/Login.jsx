@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api.js";
+import { salvarAuth } from "../services/auth.js";
 
 export default function Login() {
   const navigate = useNavigate();
-
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
@@ -22,9 +22,7 @@ export default function Login() {
         senha
       });
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-
+      salvarAuth(data);
       navigate("/");
     } catch (err) {
       setErro(err?.response?.data?.error || "Erro ao entrar.");
