@@ -1,9 +1,14 @@
-export default function Topbar({ titulo, subtitulo }) {
+import React from "react";
+import { getUser } from "../services/auth.js";
+
+export default function Topbar() {
+  const user = getUser();
+
   return (
     <header className="topbar">
       <div>
-        <h1>{titulo}</h1>
-        <p>{subtitulo}</p>
+        <h1>Painel</h1>
+        <p>{user?.loja || "Rosa Boutique"}</p>
       </div>
     </header>
   );
