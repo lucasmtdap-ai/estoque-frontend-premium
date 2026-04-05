@@ -1,19 +1,20 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api.js";
+import { salvarAuth } from "../services/auth.js";
 
-export default function Register() {
+export default function Registro() {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
     nome: "",
+    loja: "",
     email: "",
-    senha: "",
-    loja: ""
+    senha: ""
   });
 
-  const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
+  const [carregando, setCarregando] = useState(false);
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -23,7 +24,7 @@ export default function Register() {
     e.preventDefault();
     setErro("");
 
-    if (!form.nome || !form.email || !form.senha || !form.loja) {
+    if (!form.nome || !form.loja || !form.email || !form.senha) {
       setErro("Preencha todos os campos.");
       return;
     }
@@ -33,24 +34,15 @@ export default function Register() {
 
       const { data } = await api.post("/auth/register", {
         nome: form.nome,
+        loja: form.loja,
         email: form.email,
-        senha: form.senha,
-        loja: form.loja
+        senha: form.senha
       });
 
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-      }
-
-      if (data.user) {
-        localStorage.setItem("user", JSON.stringify(data.user));
-      }
-
+      salvarAuth(data);
       navigate("/");
     } catch (err) {
-      setErro(
-        err?.response?.data?.error || "Erro ao criar conta."
-      );
+      setErro(err?.response?.data?.error || "Erro ao criar conta.");
     } finally {
       setCarregando(false);
     }
