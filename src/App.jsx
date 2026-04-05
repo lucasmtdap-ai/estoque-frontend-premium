@@ -4,7 +4,6 @@ import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Produtos from "./pages/Produtos.jsx";
-
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AppLayout from "./layout/AppLayout.jsx";
 
