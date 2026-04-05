@@ -1,7 +1,9 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Register() {
+  const navigate = useNavigate();
+
   const [nome, setNome] = useState("");
   const [loja, setLoja] = useState("");
   const [email, setEmail] = useState("");
@@ -9,7 +11,7 @@ export default function Register() {
 
   function handleSubmit(e) {
     e.preventDefault();
-    alert(`Cadastro carregou. Nome: ${nome}`);
+    navigate("/login");
   }
 
   return (
