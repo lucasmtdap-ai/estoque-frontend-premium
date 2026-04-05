@@ -1,45 +1,70 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import api from "../services/api";
-import { salvarAuth } from "../services/auth";
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import api from "../services/api.js";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
   const navigate = useNavigate();
 
-  async function handleLogin(e) {
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [erro, setErro] = useState("");
+  const [carregando, setCarregando] = useState(false);
+
+  async function handleSubmit(e) {
     e.preventDefault();
+    setErro("");
 
     try {
-      const res = await api.post("/login", { email, senha });
-      salvarAuth(res.data);
-      navigate("/dashboard");
-    } catch {
-      alert("Erro no login");
+      setCarregando(true);
+
+      const { data } = await api.post("/auth/login", {
+        email,
+        senha
+      });
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      navigate("/");
+    } catch (err) {
+      setErro(err?.response?.data?.error || "Erro ao entrar.");
+    } finally {
+      setCarregando(false);
     }
   }
 
   return (
-    <div className="login-container">
-      <form onSubmit={handleLogin} className="login-box">
-        <h2>Rosa Boutique</h2>
+    <div className="auth-page">
+      <div className="auth-card">
+        <h1>Rosa Boutique</h1>
+        <p className="auth-subtitle">Entre na sua conta</p>
 
-        <input
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        {erro ? <div className="alert alert-error">{erro}</div> : null}
 
-        <input
-          type="password"
-          placeholder="Senha"
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-        />
+        <form onSubmit={handleSubmit} className="auth-form">
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
 
-        <button>Entrar</button>
-      </form>
+          <input
+            type="password"
+            placeholder="Senha"
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+          />
+
+          <button type="submit" disabled={carregando}>
+            {carregando ? "Entrando..." : "Entrar"}
+          </button>
+        </form>
+
+        <p className="auth-switch">
+          Não tem conta? <Link to="/register">Criar conta</Link>
+        </p>
+      </div>
     </div>
   );
 }
