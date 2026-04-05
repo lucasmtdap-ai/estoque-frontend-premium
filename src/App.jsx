@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Sidebar from "./components/Sidebar";
 import Topbar from "./components/Topbar";
-import Dashboard from "./pages/Dashboard";
-import Produtos from "./pages/Produtos";
+import Dashboard from "./pages/Dashboard.jsx";
+import Produtos from "./pages/Produtos.jsx";
 
 const API = "https://stock-backend-hp9t.onrender.com/produtos";
 
