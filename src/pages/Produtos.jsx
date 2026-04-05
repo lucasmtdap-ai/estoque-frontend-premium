@@ -1,26 +1,33 @@
-import React, { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import api from "../services/api";
+import AppLayout from "../layout/AppLayout";
 
 const initialForm = {
   nome: "",
   preco: "",
   categoria: "",
-  estoque: "",
+  estoque: ""
 };
 
-export default function Produtos({
-  API,
-  produtos,
-  setProdutos,
-  carregarProdutos,
-  carregando,
-}) {
+export default function Produtos() {
+  const [produtos, setProdutos] = useState([]);
   const [busca, setBusca] = useState("");
   const [modalAberto, setModalAberto] = useState(false);
   const [editandoId, setEditandoId] = useState(null);
-  const [salvando, setSalvando] = useState(false);
-  const [erro, setErro] = useState("");
-  const [sucesso, setSucesso] = useState("");
   const [form, setForm] = useState(initialForm);
+
+  async function load() {
+    try {
+      const res = await api.get("/produtos");
+      setProdutos(res.data);
+    } catch {
+      alert("Erro ao carregar produtos");
+    }
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
 
   const filtrados = useMemo(() => {
     const termo = busca.toLowerCase();
@@ -35,8 +42,6 @@ export default function Produtos({
   function abrirNovo() {
     setEditandoId(null);
     setForm(initialForm);
-    setErro("");
-    setSucesso("");
     setModalAberto(true);
   }
 
@@ -44,12 +49,10 @@ export default function Produtos({
     setEditandoId(produto.id);
     setForm({
       nome: produto.nome || "",
-      preco: produto.preco ?? "",
+      preco: produto.preco || "",
       categoria: produto.categoria || "",
-      estoque: produto.estoque ?? "",
+      estoque: produto.estoque || ""
     });
-    setErro("");
-    setSucesso("");
     setModalAberto(true);
   }
 
@@ -65,54 +68,25 @@ export default function Produtos({
 
   async function salvar(e) {
     e.preventDefault();
-    setErro("");
-    setSucesso("");
-
-    if (!form.nome.trim() || form.preco === "") {
-      setErro("Preencha nome e preço.");
-      return;
-    }
 
     try {
-      setSalvando(true);
-
       const payload = {
-        nome: form.nome.trim(),
+        nome: form.nome,
         preco: Number(form.preco),
-        categoria: form.categoria.trim(),
-        estoque: Number(form.estoque || 0),
+        categoria: form.categoria,
+        estoque: Number(form.estoque || 0)
       };
 
-      const url = editandoId ? `${API}/${editandoId}` : API;
-      const method = editandoId ? "PUT" : "POST";
-
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) throw new Error("Erro ao salvar produto");
-
-      const dados = await res.json();
-
       if (editandoId) {
-        setProdutos((prev) => prev.map((p) => (p.id === editandoId ? dados : p)));
-        setSucesso("Produto atualizado com sucesso.");
+        await api.put(`/produtos/${editandoId}`, payload);
       } else {
-        setProdutos((prev) => [...prev, dados]);
-        setSucesso("Produto criado com sucesso.");
+        await api.post("/produtos", payload);
       }
 
-      setTimeout(() => {
-        fecharModal();
-        setSucesso("");
-      }, 600);
-    } catch (e) {
-      console.error(e);
-      setErro("Erro ao salvar produto.");
-    } finally {
-      setSalvando(false);
+      fecharModal();
+      load();
+    } catch {
+      alert("Erro ao salvar produto");
     }
   }
 
@@ -121,169 +95,112 @@ export default function Produtos({
     if (!confirmar) return;
 
     try {
-      const res = await fetch(`${API}/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Erro ao excluir");
-
-      setProdutos((prev) => prev.filter((p) => p.id !== id));
-    } catch (e) {
-      console.error(e);
-      alert("Erro ao excluir produto.");
+      await api.delete(`/produtos/${id}`);
+      load();
+    } catch {
+      alert("Erro ao excluir produto");
     }
   }
 
   return (
-    <div className="produtos-page">
-      <div className="panel panel-full">
-        <div className="panel-header products-header">
-          <div>
-            <h3>Produtos cadastrados</h3>
-            <p>Gerencie estoque, categorias e preços</p>
-          </div>
+    <AppLayout
+      titulo="Produtos"
+      subtitulo="Gerencie seus produtos da Rosa Boutique"
+    >
+      <div className="products-toolbar">
+        <input
+          className="search-input"
+          placeholder="Buscar produto..."
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+        />
 
-          <div className="products-actions">
-            <input
-              className="search-input"
-              placeholder="Buscar produto..."
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-            />
-            <button className="primary-btn" onClick={abrirNovo}>
-              + Novo Produto
-            </button>
-          </div>
-        </div>
+        <button className="primary-btn" onClick={abrirNovo}>
+          + Novo Produto
+        </button>
+      </div>
 
-        {carregando ? (
-          <div className="empty-box">Carregando produtos...</div>
-        ) : filtrados.length === 0 ? (
-          <div className="empty-box">Nenhum produto encontrado.</div>
-        ) : (
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Produto</th>
-                  <th>Categoria</th>
-                  <th>Preço</th>
-                  <th>Estoque</th>
-                  <th>Total</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtrados.map((p) => {
-                  const estoque = Number(p.estoque || 0);
-                  const total = Number(p.preco || 0) * estoque;
+      <div className="table-card">
+        <table className="products-table">
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th>Categoria</th>
+              <th>Preço</th>
+              <th>Estoque</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
 
-                  return (
-                    <tr key={p.id}>
-                      <td>
-                        <strong>{p.nome}</strong>
-                      </td>
-                      <td>
-                        <span className="category-badge">
-                          {p.categoria || "Sem categoria"}
-                        </span>
-                      </td>
-                      <td>R$ {Number(p.preco || 0).toFixed(2)}</td>
-                      <td>
-                        <span
-                          className={`stock-pill ${
-                            estoque <= 0 ? "out" : estoque <= 3 ? "low" : "ok"
-                          }`}
-                        >
-                          {estoque}
-                        </span>
-                      </td>
-                      <td>R$ {total.toFixed(2)}</td>
-                      <td>
-                        <div className="action-buttons">
-                          <button className="edit-btn" onClick={() => abrirEditar(p)}>
-                            Editar
-                          </button>
-                          <button className="delete-btn" onClick={() => excluir(p.id)}>
-                            Excluir
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+          <tbody>
+            {filtrados.map((p) => (
+              <tr key={p.id}>
+                <td>{p.nome}</td>
+                <td>{p.categoria || "Sem categoria"}</td>
+                <td>R$ {Number(p.preco || 0).toFixed(2)}</td>
+                <td>{p.estoque}</td>
+                <td>
+                  <div className="table-actions">
+                    <button className="edit-btn" onClick={() => abrirEditar(p)}>
+                      Editar
+                    </button>
+
+                    <button className="delete-btn" onClick={() => excluir(p.id)}>
+                      Excluir
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {modalAberto && (
         <div className="modal-overlay">
-          <div className="modal">
+          <div className="modal-box">
             <div className="modal-header">
-              <div>
-                <h3>{editandoId ? "Editar produto" : "Novo produto"}</h3>
-                <p>Preencha os dados do produto</p>
-              </div>
-
+              <h3>{editandoId ? "Editar Produto" : "Novo Produto"}</h3>
               <button className="close-btn" onClick={fecharModal}>
                 ×
               </button>
             </div>
 
-            {erro ? <div className="alert alert-error">{erro}</div> : null}
-            {sucesso ? <div className="alert alert-success">{sucesso}</div> : null}
-
             <form onSubmit={salvar} className="modal-form">
-              <div className="form-group full">
-                <label>Nome do produto</label>
-                <input
-                  value={form.nome}
-                  onChange={(e) => onChange("nome", e.target.value)}
-                  placeholder="Ex: Camiseta premium"
-                />
-              </div>
+              <input
+                placeholder="Nome"
+                value={form.nome}
+                onChange={(e) => onChange("nome", e.target.value)}
+              />
 
-              <div className="form-group">
-                <label>Preço</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={form.preco}
-                  onChange={(e) => onChange("preco", e.target.value)}
-                  placeholder="Ex: 89.90"
-                />
-              </div>
+              <input
+                type="number"
+                step="0.01"
+                placeholder="Preço"
+                value={form.preco}
+                onChange={(e) => onChange("preco", e.target.value)}
+              />
 
-              <div className="form-group">
-                <label>Estoque</label>
-                <input
-                  type="number"
-                  value={form.estoque}
-                  onChange={(e) => onChange("estoque", e.target.value)}
-                  placeholder="Ex: 10"
-                />
-              </div>
+              <input
+                placeholder="Categoria"
+                value={form.categoria}
+                onChange={(e) => onChange("categoria", e.target.value)}
+              />
 
-              <div className="form-group full">
-                <label>Categoria</label>
-                <input
-                  value={form.categoria}
-                  onChange={(e) => onChange("categoria", e.target.value)}
-                  placeholder="Ex: Feminina"
-                />
-              </div>
+              <input
+                type="number"
+                placeholder="Estoque"
+                value={form.estoque}
+                onChange={(e) => onChange("estoque", e.target.value)}
+              />
 
-              <div className="modal-footer">
-                <button type="button" className="secondary-btn" onClick={fecharModal}>
-                  Cancelar
-                </button>
-                <button type="submit" className="primary-btn" disabled={salvando}>
-                  {salvando ? "Salvando..." : editandoId ? "Salvar alterações" : "Criar produto"}
-                </button>
-              </div>
+              <button className="primary-btn">
+                {editandoId ? "Salvar alterações" : "Criar produto"}
+              </button>
             </form>
           </div>
         </div>
       )}
-    </div>
+    </AppLayout>
   );
 }
