@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import api from "../services/api.js";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -8,10 +9,32 @@ export default function Register() {
   const [loja, setLoja] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [erro, setErro] = useState("");
+  const [carregando, setCarregando] = useState(false);
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    navigate("/login");
+    setErro("");
+
+    try {
+      setCarregando(true);
+
+      const { data } = await api.post("/auth/register", {
+        nome,
+        loja,
+        email,
+        senha
+      });
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      navigate("/");
+    } catch (err) {
+      setErro(err?.response?.data?.error || "Erro ao criar conta.");
+    } finally {
+      setCarregando(false);
+    }
   }
 
   return (
@@ -19,6 +42,8 @@ export default function Register() {
       <div className="auth-card">
         <h1>Rosa Boutique</h1>
         <p className="auth-subtitle">Crie sua conta</p>
+
+        {erro ? <div className="alert alert-error">{erro}</div> : null}
 
         <form onSubmit={handleSubmit} className="auth-form">
           <input
@@ -49,7 +74,9 @@ export default function Register() {
             onChange={(e) => setSenha(e.target.value)}
           />
 
-          <button type="submit">Criar conta</button>
+          <button type="submit" disabled={carregando}>
+            {carregando ? "Criando..." : "Criar conta"}
+          </button>
         </form>
 
         <p className="auth-switch">
