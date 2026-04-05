@@ -71,14 +71,14 @@ export default function Produtos() {
   }
 
   function editarProduto(produto) {
-    setNome(produto.nome || "");
-    setPreco(produto.preco || "");
-    setCategoria(produto.categoria || "");
-    setEstoque(produto.estoque || "");
-    setEditandoId(produto.id);
-    setErro("");
-    setSucesso("");
-  }
+  setNome(produto.nome ?? "");
+  setPreco(String(produto.preco ?? ""));
+  setCategoria(produto.categoria ?? "");
+  setEstoque(String(produto.estoque ?? ""));
+  setEditandoId(produto.id);
+  setErro("");
+  setSucesso("");
+}
 
   async function excluirProduto(id) {
     const confirmar = window.confirm("Deseja excluir este produto?");
