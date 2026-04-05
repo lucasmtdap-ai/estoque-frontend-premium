@@ -1,34 +1,32 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
-import Produtos from "./pages/Produtos";
-import ProtectedRoute from "./components/ProtectedRoute";
+import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Login from "./pages/Login.jsx";
+import Register from "./pages/Register.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
+import Produtos from "./pages/Produtos.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import AppLayout from "./layout/appLayout.jsx";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
         <Route
-          path="/dashboard"
+          path="/"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <AppLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<Dashboard />} />
+          <Route path="produtos" element={<Produtos />} />
+        </Route>
 
-        <Route
-          path="/produtos"
-          element={
-            <ProtectedRoute>
-              <Produtos />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );
