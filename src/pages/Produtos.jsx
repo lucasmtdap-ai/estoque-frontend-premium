@@ -8,6 +8,7 @@ export default function Produtos() {
   const [categoria, setCategoria] = useState("");
   const [estoque, setEstoque] = useState("");
   const [erro, setErro] = useState("");
+  const [sucesso, setSucesso] = useState("");
 
   async function carregarProdutos() {
     try {
@@ -25,6 +26,7 @@ export default function Produtos() {
   async function cadastrarProduto(e) {
     e.preventDefault();
     setErro("");
+    setSucesso("");
 
     try {
       await api.post("/produtos", {
@@ -38,6 +40,7 @@ export default function Produtos() {
       setPreco("");
       setCategoria("");
       setEstoque("");
+      setSucesso("Produto cadastrado com sucesso.");
       carregarProdutos();
     } catch (err) {
       setErro(err?.response?.data?.error || "Erro ao cadastrar produto.");
@@ -49,8 +52,17 @@ export default function Produtos() {
       <h1>Produtos</h1>
 
       {erro ? <p style={{ color: "red" }}>{erro}</p> : null}
+      {sucesso ? <p style={{ color: "green" }}>{sucesso}</p> : null}
 
-      <form onSubmit={cadastrarProduto} style={{ display: "grid", gap: "10px", maxWidth: "400px", marginBottom: "30px" }}>
+      <form
+        onSubmit={cadastrarProduto}
+        style={{
+          display: "grid",
+          gap: "10px",
+          maxWidth: "600px",
+          marginBottom: "30px"
+        }}
+      >
         <input
           type="text"
           placeholder="Nome do produto"
@@ -82,15 +94,26 @@ export default function Produtos() {
         <button type="submit">Cadastrar produto</button>
       </form>
 
-      <div>
-        {produtos.map((produto) => (
-          <div key={produto.id} style={{ border: "1px solid #ddd", padding: "12px", marginBottom: "10px", borderRadius: "8px" }}>
-            <strong>{produto.nome}</strong>
-            <p>Categoria: {produto.categoria}</p>
-            <p>Preço: R$ {Number(produto.preco || 0).toFixed(2)}</p>
-            <p>Estoque: {produto.estoque}</p>
-          </div>
-        ))}
+      <div style={{ display: "grid", gap: "12px", maxWidth: "700px" }}>
+        {produtos.length === 0 ? (
+          <p>Nenhum produto cadastrado.</p>
+        ) : (
+          produtos.map((produto) => (
+            <div
+              key={produto.id}
+              style={{
+                border: "1px solid #ddd",
+                borderRadius: "10px",
+                padding: "12px"
+              }}
+            >
+              <strong>{produto.nome}</strong>
+              <p>Categoria: {produto.categoria || "-"}</p>
+              <p>Preço: R$ {Number(produto.preco || 0).toFixed(2)}</p>
+              <p>Estoque: {produto.estoque}</p>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
