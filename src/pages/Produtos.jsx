@@ -5,18 +5,15 @@ export default function Produtos() {
   const [produtos, setProdutos] = useState([]);
   const [nome, setNome] = useState("");
   const [preco, setPreco] = useState("");
-  const [categoria, setCategoria] = useState("");
-  const [estoque, setEstoque] = useState("");
+  const [editandoId, setEditandoId] = useState(null);
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
   const [carregando, setCarregando] = useState(false);
-  const [editandoId, setEditandoId] = useState(null);
 
   async function carregarProdutos() {
     try {
       setCarregando(true);
       setErro("");
-
       const { data } = await api.get("/produtos");
       setProdutos(data);
     } catch (err) {
@@ -33,9 +30,15 @@ export default function Produtos() {
   function limparFormulario() {
     setNome("");
     setPreco("");
-    setCategoria("");
-    setEstoque("");
     setEditandoId(null);
+  }
+
+  function preencherEdicao(produto) {
+    setNome(produto.nome || "");
+    setPreco(String(produto.preco || ""));
+    setEditandoId(produto.id);
+    setErro("");
+    setSucesso("");
   }
 
   async function salvarProduto(e) {
@@ -47,11 +50,9 @@ export default function Produtos() {
       setCarregando(true);
 
       const payload = {
-  nome,
-  preco: Number(preco || 0),
-  categoria: categoria || "",
-  estoque: Number(estoque || 0)
-};
+        nome,
+        preco: Number(preco)
+      };
 
       if (editandoId) {
         await api.put(`/produtos/${editandoId}`, payload);
@@ -69,16 +70,6 @@ export default function Produtos() {
       setCarregando(false);
     }
   }
-
-  function editarProduto(produto) {
-  setNome(produto.nome ?? "");
-  setPreco(String(produto.preco ?? ""));
-  setCategoria(produto.categoria ?? "");
-  setEstoque(String(produto.estoque ?? ""));
-  setEditandoId(produto.id);
-  setErro("");
-  setSucesso("");
-}
 
   async function excluirProduto(id) {
     const confirmar = window.confirm("Deseja excluir este produto?");
@@ -117,7 +108,7 @@ export default function Produtos() {
         style={{
           display: "grid",
           gap: "10px",
-          maxWidth: "600px",
+          maxWidth: "500px",
           marginBottom: "30px"
         }}
       >
@@ -136,20 +127,6 @@ export default function Produtos() {
           value={preco}
           onChange={(e) => setPreco(e.target.value)}
           required
-        />
-
-        <input
-          type="text"
-          placeholder="Categoria"
-          value={categoria}
-          onChange={(e) => setCategoria(e.target.value)}
-        />
-
-        <input
-          type="number"
-          placeholder="Estoque"
-          value={estoque}
-          onChange={(e) => setEstoque(e.target.value)}
         />
 
         <div style={{ display: "flex", gap: "10px" }}>
@@ -179,12 +156,10 @@ export default function Produtos() {
               }}
             >
               <strong>{produto.nome}</strong>
-              <p>Categoria: {produto.categoria || "-"}</p>
               <p>Preço: R$ {Number(produto.preco || 0).toFixed(2)}</p>
-              <p>Estoque: {produto.estoque ?? 0}</p>
 
               <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-                <button type="button" onClick={() => editarProduto(produto)}>
+                <button type="button" onClick={() => preencherEdicao(produto)}>
                   Editar
                 </button>
 
