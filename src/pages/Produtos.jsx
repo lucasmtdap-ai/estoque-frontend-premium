@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../services/api";
-import AppLayout from "../layout/AppLayout";
+import AppLayout from "../layout/appLayout";
 
 const initialForm = {
   nome: "",
