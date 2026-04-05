@@ -1,73 +1,37 @@
-import { useEffect, useMemo, useState } from "react";
-import api from "../services/api";
-import AppLayout from "../layout/AppLayout";
-
-const initialForm = {
-  nome: "",
-  preco: "",
-  categoria: "",
-  estoque: ""
-};
+import React, { useEffect, useState } from "react";
+import api from "../services/api.js";
 
 export default function Produtos() {
   const [produtos, setProdutos] = useState([]);
-  const [busca, setBusca] = useState("");
-  const [modalAberto, setModalAberto] = useState(false);
+  const [form, setForm] = useState({
+    nome: "",
+    preco: "",
+    categoria: "",
+    estoque: ""
+  });
   const [editandoId, setEditandoId] = useState(null);
-  const [form, setForm] = useState(initialForm);
+  const [erro, setErro] = useState("");
 
-  async function load() {
+  async function carregarProdutos() {
     try {
-      const res = await api.get("/produtos");
-      setProdutos(res.data);
-    } catch {
-      alert("Erro ao carregar produtos");
+      const { data } = await api.get("/produtos");
+      setProdutos(data);
+    } catch (err) {
+      setErro(err?.response?.data?.error || "Erro ao carregar produtos.");
     }
   }
 
   useEffect(() => {
-    load();
+    carregarProdutos();
   }, []);
 
-  const filtrados = useMemo(() => {
-    const termo = busca.toLowerCase();
-    return produtos.filter((p) => {
-      return (
-        (p.nome || "").toLowerCase().includes(termo) ||
-        (p.categoria || "").toLowerCase().includes(termo)
-      );
-    });
-  }, [produtos, busca]);
-
-  function abrirNovo() {
-    setEditandoId(null);
-    setForm(initialForm);
-    setModalAberto(true);
+  function handleChange(e) {
+    setForm({ ...form, [e.target.name]: e.target.value });
   }
 
-  function abrirEditar(produto) {
-    setEditandoId(produto.id);
-    setForm({
-      nome: produto.nome || "",
-      preco: produto.preco || "",
-      categoria: produto.categoria || "",
-      estoque: produto.estoque || ""
-    });
-    setModalAberto(true);
-  }
-
-  function fecharModal() {
-    setModalAberto(false);
-    setEditandoId(null);
-    setForm(initialForm);
-  }
-
-  function onChange(campo, valor) {
-    setForm((prev) => ({ ...prev, [campo]: valor }));
-  }
-
-  async function salvar(e) {
+  async function salvarProduto(e) {
     e.preventDefault();
+    setErro("");
 
     try {
       const payload = {
@@ -83,124 +47,111 @@ export default function Produtos() {
         await api.post("/produtos", payload);
       }
 
-      fecharModal();
-      load();
-    } catch {
-      alert("Erro ao salvar produto");
+      setForm({
+        nome: "",
+        preco: "",
+        categoria: "",
+        estoque: ""
+      });
+      setEditandoId(null);
+      carregarProdutos();
+    } catch (err) {
+      setErro(err?.response?.data?.error || "Erro ao salvar produto.");
     }
   }
 
-  async function excluir(id) {
-    const confirmar = window.confirm("Deseja excluir este produto?");
-    if (!confirmar) return;
+  function editarProduto(produto) {
+    setForm({
+      nome: produto.nome || "",
+      preco: produto.preco || "",
+      categoria: produto.categoria || "",
+      estoque: produto.estoque || ""
+    });
+    setEditandoId(produto.id);
+  }
 
+  async function excluirProduto(id) {
     try {
       await api.delete(`/produtos/${id}`);
-      load();
-    } catch {
-      alert("Erro ao excluir produto");
+      carregarProdutos();
+    } catch (err) {
+      setErro(err?.response?.data?.error || "Erro ao excluir produto.");
     }
   }
 
   return (
-    <AppLayout
-      titulo="Produtos"
-      subtitulo="Gerencie seus produtos da Rosa Boutique"
-    >
-      <div className="products-toolbar">
+    <div className="panel">
+      <div className="panel-header">
+        <div>
+          <h3>Produtos</h3>
+          <p>Cadastre, edite e exclua produtos</p>
+        </div>
+      </div>
+
+      {erro ? <div className="alert alert-error">{erro}</div> : null}
+
+      <form className="product-form" onSubmit={salvarProduto}>
         <input
-          className="search-input"
-          placeholder="Buscar produto..."
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
+          name="nome"
+          placeholder="Nome"
+          value={form.nome}
+          onChange={handleChange}
+        />
+        <input
+          name="preco"
+          placeholder="Preço"
+          value={form.preco}
+          onChange={handleChange}
+        />
+        <input
+          name="categoria"
+          placeholder="Categoria"
+          value={form.categoria}
+          onChange={handleChange}
+        />
+        <input
+          name="estoque"
+          placeholder="Estoque"
+          value={form.estoque}
+          onChange={handleChange}
         />
 
-        <button className="primary-btn" onClick={abrirNovo}>
-          + Novo Produto
+        <button type="submit">
+          {editandoId ? "Atualizar produto" : "Cadastrar produto"}
         </button>
-      </div>
+      </form>
 
-      <div className="table-card">
-        <table className="products-table">
-          <thead>
-            <tr>
-              <th>Produto</th>
-              <th>Categoria</th>
-              <th>Preço</th>
-              <th>Estoque</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
+      <div className="products-list">
+        {produtos.length === 0 ? (
+          <div className="empty-box">Nenhum produto cadastrado.</div>
+        ) : (
+          produtos.map((produto) => (
+            <div className="product-card" key={produto.id}>
+              <div>
+                <strong>{produto.nome}</strong>
+                <p>Categoria: {produto.categoria || "-"}</p>
+                <p>Preço: R$ {Number(produto.preco || 0).toFixed(2)}</p>
+                <p>Estoque: {produto.estoque}</p>
+              </div>
 
-          <tbody>
-            {filtrados.map((p) => (
-              <tr key={p.id}>
-                <td>{p.nome}</td>
-                <td>{p.categoria || "Sem categoria"}</td>
-                <td>R$ {Number(p.preco || 0).toFixed(2)}</td>
-                <td>{p.estoque}</td>
-                <td>
-                  <div className="table-actions">
-                    <button className="edit-btn" onClick={() => abrirEditar(p)}>
-                      Editar
-                    </button>
-
-                    <button className="delete-btn" onClick={() => excluir(p.id)}>
-                      Excluir
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {modalAberto && (
-        <div className="modal-overlay">
-          <div className="modal-box">
-            <div className="modal-header">
-              <h3>{editandoId ? "Editar Produto" : "Novo Produto"}</h3>
-              <button className="close-btn" onClick={fecharModal}>
-                ×
-              </button>
+              <div className="action-buttons">
+                <button
+                  className="secondary-btn"
+                  onClick={() => editarProduto(produto)}
+                >
+                  Editar
+                </button>
+                <button
+                  className="delete-btn"
+                  onClick={() => excluirProduto(produto.id)}
+                >
+                  Excluir
+                </button>
+              </div>
             </div>
-
-            <form onSubmit={salvar} className="modal-form">
-              <input
-                placeholder="Nome"
-                value={form.nome}
-                onChange={(e) => onChange("nome", e.target.value)}
-              />
-
-              <input
-                type="number"
-                step="0.01"
-                placeholder="Preço"
-                value={form.preco}
-                onChange={(e) => onChange("preco", e.target.value)}
-              />
-
-              <input
-                placeholder="Categoria"
-                value={form.categoria}
-                onChange={(e) => onChange("categoria", e.target.value)}
-              />
-
-              <input
-                type="number"
-                placeholder="Estoque"
-                value={form.estoque}
-                onChange={(e) => onChange("estoque", e.target.value)}
-              />
-
-              <button className="primary-btn">
-                {editandoId ? "Salvar alterações" : "Criar produto"}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-    </AppLayout>
+          ))
+        )}
+      </div>
+    </div>
   );
 }
