@@ -4,7 +4,8 @@ import Topbar from "./components/Topbar";
 import Dashboard from "./pages/Dashboard";
 import Produtos from "./pages/Produtos";
 
-const API = "https://seu-backend.onrender.com/produtos";
+const API = "https://stock-backend-hp9t.onrender.com/produtos";
+
 export default function App() {
   const [pagina, setPagina] = useState("dashboard");
   const [produtos, setProdutos] = useState([]);
