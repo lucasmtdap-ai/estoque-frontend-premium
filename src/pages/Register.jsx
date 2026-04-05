@@ -1,51 +1,15 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import api from "../services/api.js";
-import { salvarAuth } from "../services/auth.js";
+import { Link } from "react-router-dom";
 
-export default function Registro() {
-  const navigate = useNavigate();
+export default function Register() {
+  const [nome, setNome] = useState("");
+  const [loja, setLoja] = useState("");
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
 
-  const [form, setForm] = useState({
-    nome: "",
-    loja: "",
-    email: "",
-    senha: ""
-  });
-
-  const [erro, setErro] = useState("");
-  const [carregando, setCarregando] = useState(false);
-
-  function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  }
-
-  async function handleSubmit(e) {
+  function handleSubmit(e) {
     e.preventDefault();
-    setErro("");
-
-    if (!form.nome || !form.loja || !form.email || !form.senha) {
-      setErro("Preencha todos os campos.");
-      return;
-    }
-
-    try {
-      setCarregando(true);
-
-      const { data } = await api.post("/auth/register", {
-        nome: form.nome,
-        loja: form.loja,
-        email: form.email,
-        senha: form.senha
-      });
-
-      salvarAuth(data);
-      navigate("/");
-    } catch (err) {
-      setErro(err?.response?.data?.error || "Erro ao criar conta.");
-    } finally {
-      setCarregando(false);
-    }
+    alert(`Cadastro carregou. Nome: ${nome}`);
   }
 
   return (
@@ -54,44 +18,36 @@ export default function Registro() {
         <h1>Rosa Boutique</h1>
         <p className="auth-subtitle">Crie sua conta</p>
 
-        {erro ? <div className="alert alert-error">{erro}</div> : null}
-
         <form onSubmit={handleSubmit} className="auth-form">
           <input
             type="text"
-            name="nome"
             placeholder="Seu nome"
-            value={form.nome}
-            onChange={handleChange}
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
           />
 
           <input
             type="text"
-            name="loja"
             placeholder="Nome da loja"
-            value={form.loja}
-            onChange={handleChange}
+            value={loja}
+            onChange={(e) => setLoja(e.target.value)}
           />
 
           <input
             type="email"
-            name="email"
             placeholder="Email"
-            value={form.email}
-            onChange={handleChange}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
 
           <input
             type="password"
-            name="senha"
             placeholder="Senha"
-            value={form.senha}
-            onChange={handleChange}
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
           />
 
-          <button type="submit" disabled={carregando}>
-            {carregando ? "Criando..." : "Criar conta"}
-          </button>
+          <button type="submit">Criar conta</button>
         </form>
 
         <p className="auth-switch">
