@@ -8,7 +8,8 @@ export function getToken() {
 }
 
 export function getUser() {
-  return JSON.parse(localStorage.getItem("user"));
+  const raw = localStorage.getItem("user");
+  return raw ? JSON.parse(raw) : null;
 }
 
 export function logout() {
