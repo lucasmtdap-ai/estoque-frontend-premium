@@ -1,8 +1,7 @@
 import React from "react";
-import { getUser } from "../services/auth.js";
 
 export default function Topbar() {
-  const user = getUser();
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   return (
     <header className="topbar">
