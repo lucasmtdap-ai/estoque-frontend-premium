@@ -1,8 +1,16 @@
-export default function Topbar() {
+import React from "react";
+
+export default function Topbar({ titulo }) {
   return (
-    <div className="topbar">
-      <h1>Painel</h1>
-      <span>👤 Admin</span>
-    </div>
+    <header className="topbar">
+      <div>
+        <h1>{titulo}</h1>
+        <p>Visão geral do seu negócio</p>
+      </div>
+
+      <div className="topbar-actions">
+        <button className="icon-btn">🔔</button>
+      </div>
+    </header>
   );
 }
