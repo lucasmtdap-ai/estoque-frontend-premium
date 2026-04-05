@@ -7,10 +7,10 @@ export default function AppLayout() {
   return (
     <div className="app-shell">
       <Sidebar />
-      <div className="app-content">
+      <main className="app-main">
         <Topbar />
         <Outlet />
-      </div>
+      </main>
     </div>
   );
 }
