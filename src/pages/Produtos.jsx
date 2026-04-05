@@ -3,13 +3,10 @@ import api from "../services/api.js";
 
 export default function Produtos() {
   const [produtos, setProdutos] = useState([]);
-  const [form, setForm] = useState({
-    nome: "",
-    preco: "",
-    categoria: "",
-    estoque: ""
-  });
-  const [editandoId, setEditandoId] = useState(null);
+  const [nome, setNome] = useState("");
+  const [preco, setPreco] = useState("");
+  const [categoria, setCategoria] = useState("");
+  const [estoque, setEstoque] = useState("");
   const [erro, setErro] = useState("");
 
   async function carregarProdutos() {
@@ -25,132 +22,75 @@ export default function Produtos() {
     carregarProdutos();
   }, []);
 
-  function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  }
-
-  async function salvarProduto(e) {
+  async function cadastrarProduto(e) {
     e.preventDefault();
     setErro("");
 
     try {
-      const payload = {
-        nome: form.nome,
-        preco: Number(form.preco),
-        categoria: form.categoria,
-        estoque: Number(form.estoque || 0)
-      };
-
-      if (editandoId) {
-        await api.put(`/produtos/${editandoId}`, payload);
-      } else {
-        await api.post("/produtos", payload);
-      }
-
-      setForm({
-        nome: "",
-        preco: "",
-        categoria: "",
-        estoque: ""
+      await api.post("/produtos", {
+        nome,
+        preco: Number(preco),
+        categoria,
+        estoque: Number(estoque)
       });
-      setEditandoId(null);
+
+      setNome("");
+      setPreco("");
+      setCategoria("");
+      setEstoque("");
       carregarProdutos();
     } catch (err) {
-      setErro(err?.response?.data?.error || "Erro ao salvar produto.");
-    }
-  }
-
-  function editarProduto(produto) {
-    setForm({
-      nome: produto.nome || "",
-      preco: produto.preco || "",
-      categoria: produto.categoria || "",
-      estoque: produto.estoque || ""
-    });
-    setEditandoId(produto.id);
-  }
-
-  async function excluirProduto(id) {
-    try {
-      await api.delete(`/produtos/${id}`);
-      carregarProdutos();
-    } catch (err) {
-      setErro(err?.response?.data?.error || "Erro ao excluir produto.");
+      setErro(err?.response?.data?.error || "Erro ao cadastrar produto.");
     }
   }
 
   return (
-    <div className="panel">
-      <div className="panel-header">
-        <div>
-          <h3>Produtos</h3>
-          <p>Cadastre, edite e exclua produtos</p>
-        </div>
-      </div>
+    <div style={{ padding: "40px" }}>
+      <h1>Produtos</h1>
 
-      {erro ? <div className="alert alert-error">{erro}</div> : null}
+      {erro ? <p style={{ color: "red" }}>{erro}</p> : null}
 
-      <form className="product-form" onSubmit={salvarProduto}>
+      <form onSubmit={cadastrarProduto} style={{ display: "grid", gap: "10px", maxWidth: "400px", marginBottom: "30px" }}>
         <input
-          name="nome"
-          placeholder="Nome"
-          value={form.nome}
-          onChange={handleChange}
+          type="text"
+          placeholder="Nome do produto"
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
         />
+
         <input
-          name="preco"
+          type="number"
           placeholder="Preço"
-          value={form.preco}
-          onChange={handleChange}
-        />
-        <input
-          name="categoria"
-          placeholder="Categoria"
-          value={form.categoria}
-          onChange={handleChange}
-        />
-        <input
-          name="estoque"
-          placeholder="Estoque"
-          value={form.estoque}
-          onChange={handleChange}
+          value={preco}
+          onChange={(e) => setPreco(e.target.value)}
         />
 
-        <button type="submit">
-          {editandoId ? "Atualizar produto" : "Cadastrar produto"}
-        </button>
+        <input
+          type="text"
+          placeholder="Categoria"
+          value={categoria}
+          onChange={(e) => setCategoria(e.target.value)}
+        />
+
+        <input
+          type="number"
+          placeholder="Estoque"
+          value={estoque}
+          onChange={(e) => setEstoque(e.target.value)}
+        />
+
+        <button type="submit">Cadastrar produto</button>
       </form>
 
-      <div className="products-list">
-        {produtos.length === 0 ? (
-          <div className="empty-box">Nenhum produto cadastrado.</div>
-        ) : (
-          produtos.map((produto) => (
-            <div className="product-card" key={produto.id}>
-              <div>
-                <strong>{produto.nome}</strong>
-                <p>Categoria: {produto.categoria || "-"}</p>
-                <p>Preço: R$ {Number(produto.preco || 0).toFixed(2)}</p>
-                <p>Estoque: {produto.estoque}</p>
-              </div>
-
-              <div className="action-buttons">
-                <button
-                  className="secondary-btn"
-                  onClick={() => editarProduto(produto)}
-                >
-                  Editar
-                </button>
-                <button
-                  className="delete-btn"
-                  onClick={() => excluirProduto(produto.id)}
-                >
-                  Excluir
-                </button>
-              </div>
-            </div>
-          ))
-        )}
+      <div>
+        {produtos.map((produto) => (
+          <div key={produto.id} style={{ border: "1px solid #ddd", padding: "12px", marginBottom: "10px", borderRadius: "8px" }}>
+            <strong>{produto.nome}</strong>
+            <p>Categoria: {produto.categoria}</p>
+            <p>Preço: R$ {Number(produto.preco || 0).toFixed(2)}</p>
+            <p>Estoque: {produto.estoque}</p>
+          </div>
+        ))}
       </div>
     </div>
   );
