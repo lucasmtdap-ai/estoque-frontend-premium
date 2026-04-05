@@ -1,12 +1,12 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { getUser, logout } from "../services/auth.js";
 
 export default function Sidebar() {
-  const user = getUser();
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   function sair() {
-    logout();
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     window.location.href = "/login";
   }
 
@@ -15,7 +15,7 @@ export default function Sidebar() {
       <div>
         <div className="sidebar-brand">
           <h2>Rosa Boutique</h2>
-          <p>Painel SaaS</p>
+          <p>Painel Premium</p>
         </div>
 
         <nav className="sidebar-nav">
