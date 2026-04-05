@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login.jsx";
-import Registro from "./pages/Registro.jsx";
+import Register from "./pages/Register.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Produtos from "./pages/Produtos.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
