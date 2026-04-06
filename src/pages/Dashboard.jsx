@@ -4,6 +4,7 @@ import api from "../services/api";
 export default function Dashboard() {
   const [user, setUser] = useState({});
   const [produtos, setProdutos] = useState([]);
+  const [vendas, setVendas] = useState([]);
 
   useEffect(() => {
     try {
@@ -17,10 +18,16 @@ export default function Dashboard() {
   useEffect(() => {
     async function carregar() {
       try {
-        const { data } = await api.get("/produtos");
-        setProdutos(Array.isArray(data) ? data : []);
+        const [produtosRes, vendasRes] = await Promise.all([
+          api.get("/produtos"),
+          api.get("/vendas")
+        ]);
+
+        setProdutos(Array.isArray(produtosRes.data) ? produtosRes.data : []);
+        setVendas(Array.isArray(vendasRes.data) ? vendasRes.data : []);
       } catch {
         setProdutos([]);
+        setVendas([]);
       }
     }
 
@@ -45,6 +52,35 @@ export default function Dashboard() {
     return produtos.filter((p) => Number(p.estoque || 0) <= 3).length;
   }, [produtos]);
 
+  const totalVendas = vendas.length;
+
+  const valorVendido = useMemo(() => {
+    return vendas.reduce((total, v) => {
+      return total + Number(v.valor_total || 0);
+    }, 0);
+  }, [vendas]);
+
+  const ultimasVendas = useMemo(() => {
+    return vendas.slice(0, 5);
+  }, [vendas]);
+
+  const topProdutos = useMemo(() => {
+    const mapa = {};
+
+    vendas.forEach((v) => {
+      const nome = v.produto_nome || "Produto";
+      if (!mapa[nome]) {
+        mapa[nome] = 0;
+      }
+      mapa[nome] += Number(v.quantidade || 0);
+    });
+
+    return Object.entries(mapa)
+      .map(([nome, quantidade]) => ({ nome, quantidade }))
+      .sort((a, b) => b.quantidade - a.quantidade)
+      .slice(0, 5);
+  }, [vendas]);
+
   return (
     <div className="premium-dashboard">
       <div className="premium-hero">
@@ -52,7 +88,7 @@ export default function Dashboard() {
           <span className="hero-badge">Painel inteligente</span>
           <h1 className="hero-title">Dashboard Premium</h1>
           <p className="hero-subtitle">
-            Acompanhe produtos, lucro e alertas de estoque em tempo real.
+            Acompanhe produtos, lucro, estoque e vendas em tempo real.
           </p>
         </div>
 
@@ -89,6 +125,20 @@ export default function Dashboard() {
         </div>
       </div>
 
+      <div className="premium-cards-grid" style={{ marginTop: "18px" }}>
+        <div className="premium-stat-card blue">
+          <div className="stat-label">Total de vendas</div>
+          <div className="stat-value">{totalVendas}</div>
+          <div className="stat-note">Vendas registradas no sistema</div>
+        </div>
+
+        <div className="premium-stat-card green">
+          <div className="stat-label">Valor vendido</div>
+          <div className="stat-value">R$ {valorVendido.toFixed(2)}</div>
+          <div className="stat-note">Soma total das vendas</div>
+        </div>
+      </div>
+
       <div className="premium-dashboard-grid">
         <section className="premium-panel">
           <div className="panel-header">
@@ -121,6 +171,16 @@ export default function Dashboard() {
               <span>Itens com estoque baixo</span>
               <strong>{estoqueBaixo}</strong>
             </div>
+
+            <div className="summary-row">
+              <span>Total de vendas</span>
+              <strong>{totalVendas}</strong>
+            </div>
+
+            <div className="summary-row">
+              <span>Valor vendido</span>
+              <strong>R$ {valorVendido.toFixed(2)}</strong>
+            </div>
           </div>
         </section>
 
@@ -144,6 +204,56 @@ export default function Dashboard() {
                     <strong>Estoque: {Number(p.estoque || 0)}</strong>
                   </div>
                 ))}
+            </div>
+          )}
+        </section>
+      </div>
+
+      <div className="premium-dashboard-grid" style={{ marginTop: "20px" }}>
+        <section className="premium-panel">
+          <div className="panel-header">
+            <h2>Últimas vendas</h2>
+            <p>Histórico recente</p>
+          </div>
+
+          {ultimasVendas.length === 0 ? (
+            <div className="empty-chart">
+              <p>Nenhuma venda registrada ainda.</p>
+            </div>
+          ) : (
+            <div className="summary-list">
+              {ultimasVendas.map((v) => (
+                <div className="summary-row" key={v.id}>
+                  <span>
+                    {v.produto_nome} × {v.quantidade}
+                  </span>
+                  <strong>R$ {Number(v.valor_total || 0).toFixed(2)}</strong>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="premium-panel">
+          <div className="panel-header">
+            <h2>Top produtos</h2>
+            <p>Mais vendidos</p>
+          </div>
+
+          {topProdutos.length === 0 ? (
+            <div className="empty-chart">
+              <p>Sem vendas suficientes para montar ranking.</p>
+            </div>
+          ) : (
+            <div className="summary-list">
+              {topProdutos.map((p, index) => (
+                <div className="summary-row" key={p.nome}>
+                  <span>
+                    #{index + 1} {p.nome}
+                  </span>
+                  <strong>{p.quantidade} vendidos</strong>
+                </div>
+              ))}
             </div>
           )}
         </section>
