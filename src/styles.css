@@ -856,3 +856,11 @@ a {
 .produto-form button {
   min-width: 140px;
 }
+
+.alerta-estoque {
+  display: inline-block;
+  margin-top: 10px;
+  margin-left: 10px;
+  color: #d62828;
+  font-weight: bold;
+}
