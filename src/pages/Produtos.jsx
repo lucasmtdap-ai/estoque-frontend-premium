@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import api from "../services/api";
 
 export default function Produtos() {
@@ -7,9 +7,11 @@ export default function Produtos() {
   const [preco, setPreco] = useState("");
   const [custo, setCusto] = useState("");
   const [estoque, setEstoque] = useState("");
+  const [categoria, setCategoria] = useState("");
   const [editando, setEditando] = useState(null);
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
+  const [filtroCategoria, setFiltroCategoria] = useState("Todas");
 
   async function carregar() {
     try {
@@ -24,6 +26,16 @@ export default function Produtos() {
     carregar();
   }, []);
 
+  const categoriasDisponiveis = useMemo(() => {
+    const lista = [...new Set(produtos.map((p) => p.categoria || "Sem categoria"))];
+    return ["Todas", ...lista];
+  }, [produtos]);
+
+  const produtosFiltrados = useMemo(() => {
+    if (filtroCategoria === "Todas") return produtos;
+    return produtos.filter((p) => (p.categoria || "Sem categoria") === filtroCategoria);
+  }, [produtos, filtroCategoria]);
+
   async function cadastrar(e) {
     e.preventDefault();
     setErro("");
@@ -34,13 +46,15 @@ export default function Produtos() {
         nome,
         preco: Number(preco),
         custo: Number(custo || 0),
-        estoque: Number(estoque || 0)
+        estoque: Number(estoque || 0),
+        categoria: categoria || "Sem categoria"
       });
 
       setNome("");
       setPreco("");
       setCusto("");
       setEstoque("");
+      setCategoria("");
       setSucesso("Produto cadastrado com sucesso");
       carregar();
     } catch (err) {
@@ -63,7 +77,8 @@ export default function Produtos() {
         nome: editando.nome,
         preco: Number(editando.preco),
         custo: Number(editando.custo || 0),
-        estoque: Number(editando.estoque || 0)
+        estoque: Number(editando.estoque || 0),
+        categoria: editando.categoria || "Sem categoria"
       });
 
       setEditando(null);
@@ -113,17 +128,39 @@ export default function Produtos() {
           onChange={(e) => setEstoque(e.target.value)}
         />
 
+        <input
+          type="text"
+          placeholder="Categoria"
+          value={categoria}
+          onChange={(e) => setCategoria(e.target.value)}
+        />
+
         <button type="submit">Cadastrar</button>
       </form>
 
+      <div className="filtro-categoria-wrap">
+        <label>Filtrar por categoria</label>
+        <select
+          value={filtroCategoria}
+          onChange={(e) => setFiltroCategoria(e.target.value)}
+        >
+          {categoriasDisponiveis.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div className="produtos-grid">
-        {produtos.map((p) => {
+        {produtosFiltrados.map((p) => {
           const lucro = Number(p.preco || 0) - Number(p.custo || 0);
           const baixo = Number(p.estoque || 0) <= 3;
 
           return (
             <div className="produto-card" key={p.id}>
               <h2>{p.nome}</h2>
+              <p>🏷 Categoria: {p.categoria || "Sem categoria"}</p>
               <p>💰 Venda: R$ {Number(p.preco || 0).toFixed(2)}</p>
               <p>🧾 Custo: R$ {Number(p.custo || 0).toFixed(2)}</p>
               <p>📈 Lucro: R$ {lucro.toFixed(2)}</p>
@@ -180,6 +217,13 @@ export default function Produtos() {
               value={editando.estoque || ""}
               onChange={(e) =>
                 setEditando({ ...editando, estoque: e.target.value })
+              }
+            />
+
+            <input
+              value={editando.categoria || ""}
+              onChange={(e) =>
+                setEditando({ ...editando, categoria: e.target.value })
               }
             />
 
