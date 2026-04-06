@@ -703,3 +703,75 @@ a {
     font-size: 32px;
   }
 }
+
+.produtos-container {
+  padding: 30px;
+}
+
+.produtos-container h1 {
+  color: #c21874;
+  margin-bottom: 20px;
+}
+
+/* FORM */
+.produto-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.produto-form input {
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #eee;
+  flex: 1;
+}
+
+.produto-form button {
+  background: linear-gradient(135deg, #ff5c93, #d81b60);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* GRID */
+.produtos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+/* CARD */
+.produto-card {
+  background: white;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  transition: 0.2s;
+}
+
+.produto-card:hover {
+  transform: translateY(-5px);
+}
+
+.produto-card h2 {
+  color: #c21874;
+  margin-bottom: 10px;
+}
+
+.acoes {
+  margin-top: 15px;
+}
+
+.btn-excluir {
+  background: #ff4d4f;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
