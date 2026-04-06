@@ -864,3 +864,7 @@ a {
   color: #d62828;
   font-weight: bold;
 }
+
+.premium-stat-card.red {
+  background: linear-gradient(135deg, #ff4d4f 0%, #d62828 100%);
+}
