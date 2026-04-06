@@ -70,8 +70,20 @@ export default function Dashboard() {
       .sort((a, b) => b.quantidade - a.quantidade);
   }, [produtos]);
 
+  const plano = user?.plano || "basico";
+
   return (
     <div className="premium-dashboard">
+      {plano !== "premium" && (
+        <div className="upgrade-box">
+          <strong>🚀 Desbloqueie o Premium</strong>
+          <p>Tenha acesso ilimitado a produtos, vendas e relatórios.</p>
+          <button onClick={() => alert("Entre em contato para ativar premium")}>
+            Ativar Premium
+          </button>
+        </div>
+      )}
+
       <div className="premium-hero">
         <div>
           <span className="hero-badge">Painel inteligente</span>
