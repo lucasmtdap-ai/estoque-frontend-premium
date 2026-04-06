@@ -32,6 +32,18 @@ export default function Vendas() {
     setErro("");
     setSucesso("");
 
+    let user = {};
+    try {
+      user = JSON.parse(localStorage.getItem("user") || "{}");
+    } catch {
+      user = {};
+    }
+
+    if ((user.plano || "basico") !== "premium" && vendas.length >= 20) {
+      setErro("Plano básico permite até 20 vendas. Faça upgrade para premium.");
+      return;
+    }
+
     try {
       await api.post("/vendas", {
         produtoId: Number(produtoId),
