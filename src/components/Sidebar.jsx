@@ -17,36 +17,39 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="sidebar">
+    <aside className="sidebar-final">
       <div>
-        <div className="sidebar-brand">
-          <h2>Rosa Boutique</h2>
-          <p>Painel Premium</p>
+        <div className="sidebar-brand-final">
+          <div className="brand-icon">RB</div>
+          <div>
+            <h2>Rosa Boutique</h2>
+            <p>SaaS Premium</p>
+          </div>
         </div>
 
-        <nav className="sidebar-nav">
-          <NavLink to="/" end className="nav-link">
+        <nav className="sidebar-nav-final">
+          <NavLink to="/" end className="nav-link-final">
             Dashboard
           </NavLink>
 
-          <NavLink to="/produtos" className="nav-link">
+          <NavLink to="/produtos" className="nav-link-final">
             Produtos
           </NavLink>
 
-          <NavLink to="/vendas" className="nav-link">
+          <NavLink to="/vendas" className="nav-link-final">
             Vendas
           </NavLink>
         </nav>
       </div>
 
-      <div className="sidebar-footer">
-        <div className="sidebar-user">
+      <div className="sidebar-footer-final">
+        <div className="sidebar-user-final">
           <strong>{user?.nome || "Usuário"}</strong>
           <span>{user?.loja || user?.email || ""}</span>
         </div>
 
-        <button className="logout-btn" onClick={sair}>
-          Sair
+        <button className="logout-btn-final" onClick={sair}>
+          Sair do sistema
         </button>
       </div>
     </aside>
