@@ -837,3 +837,22 @@ a {
 .modal-actions button:last-child {
   background: #eee;
 }
+
+.produto-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 28px;
+  position: relative;
+  z-index: 1;
+}
+
+.produto-form input,
+.produto-form button {
+  height: 52px;
+}
+
+.produto-form button {
+  min-width: 140px;
+}
