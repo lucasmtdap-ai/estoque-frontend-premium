@@ -1,119 +1,49 @@
 import React, { useEffect, useState } from "react";
-import api from "../services/api.js";
+import api from "../services/api";
 
 export default function Produtos() {
   const [produtos, setProdutos] = useState([]);
   const [nome, setNome] = useState("");
   const [preco, setPreco] = useState("");
-  const [editandoId, setEditandoId] = useState(null);
-  const [erro, setErro] = useState("");
-  const [sucesso, setSucesso] = useState("");
-  const [carregando, setCarregando] = useState(false);
+  const [quantidade, setQuantidade] = useState("");
 
-  async function carregarProdutos() {
-    try {
-      setCarregando(true);
-      setErro("");
-      const { data } = await api.get("/produtos");
-      setProdutos(data);
-    } catch (err) {
-      setErro(err?.response?.data?.error || "Erro ao carregar produtos.");
-    } finally {
-      setCarregando(false);
-    }
+  async function carregar() {
+    const { data } = await api.get("/produtos");
+    setProdutos(data);
   }
 
   useEffect(() => {
-    carregarProdutos();
+    carregar();
   }, []);
 
-  function limparFormulario() {
+  async function cadastrar(e) {
+    e.preventDefault();
+
+    await api.post("/produtos", {
+      nome,
+      preco,
+      quantidade
+    });
+
     setNome("");
     setPreco("");
-    setEditandoId(null);
+    setQuantidade("");
+    carregar();
   }
 
-  function preencherEdicao(produto) {
-    setNome(produto.nome || "");
-    setPreco(String(produto.preco || ""));
-    setEditandoId(produto.id);
-    setErro("");
-    setSucesso("");
-  }
-
-  async function salvarProduto(e) {
-    e.preventDefault();
-    setErro("");
-    setSucesso("");
-
-    try {
-      setCarregando(true);
-
-      const payload = {
-        nome,
-        preco: Number(preco)
-      };
-
-      if (editandoId) {
-        await api.put(`/produtos/${editandoId}`, payload);
-        setSucesso("Produto atualizado com sucesso.");
-      } else {
-        await api.post("/produtos", payload);
-        setSucesso("Produto cadastrado com sucesso.");
-      }
-
-      limparFormulario();
-      await carregarProdutos();
-    } catch (err) {
-      setErro(err?.response?.data?.error || "Erro ao salvar produto.");
-    } finally {
-      setCarregando(false);
-    }
-  }
-
-  async function excluirProduto(id) {
-    const confirmar = window.confirm("Deseja excluir este produto?");
-    if (!confirmar) return;
-
-    try {
-      setCarregando(true);
-      setErro("");
-      setSucesso("");
-
-      await api.delete(`/produtos/${id}`);
-      setSucesso("Produto excluído com sucesso.");
-
-      if (editandoId === id) {
-        limparFormulario();
-      }
-
-      await carregarProdutos();
-    } catch (err) {
-      setErro(err?.response?.data?.error || "Erro ao excluir produto.");
-    } finally {
-      setCarregando(false);
-    }
+  async function excluir(id) {
+    await api.delete(`/produtos/${id}`);
+    carregar();
   }
 
   return (
-    <div style={{ padding: "40px", maxWidth: "900px" }}>
+    <div className="produtos-container">
+
       <h1>Produtos</h1>
 
-      {erro ? <p style={{ color: "red", fontWeight: "bold" }}>{erro}</p> : null}
-      {sucesso ? <p style={{ color: "green", fontWeight: "bold" }}>{sucesso}</p> : null}
-      {carregando ? <p>Carregando...</p> : null}
-
-      <form
-        onSubmit={salvarProduto}
-        style={{
-          display: "grid",
-          gap: "10px",
-          maxWidth: "500px",
-          marginBottom: "30px"
-        }}
-      >
+      {/* FORM */}
+      <form onSubmit={cadastrar} className="produto-form">
         <input
-          type="text"
           placeholder="Nome do produto"
           value={nome}
           onChange={(e) => setNome(e.target.value)}
@@ -121,56 +51,42 @@ export default function Produtos() {
         />
 
         <input
-          type="number"
-          step="0.01"
           placeholder="Preço"
           value={preco}
           onChange={(e) => setPreco(e.target.value)}
           required
         />
 
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button type="submit">
-            {editandoId ? "Atualizar produto" : "Cadastrar produto"}
-          </button>
+        <input
+          placeholder="Quantidade"
+          value={quantidade}
+          onChange={(e) => setQuantidade(e.target.value)}
+          required
+        />
 
-          {editandoId ? (
-            <button type="button" onClick={limparFormulario}>
-              Cancelar edição
-            </button>
-          ) : null}
-        </div>
+        <button type="submit">Cadastrar</button>
       </form>
 
-      <div style={{ display: "grid", gap: "12px" }}>
-        {produtos.length === 0 ? (
-          <p>Nenhum produto cadastrado.</p>
-        ) : (
-          produtos.map((produto) => (
-            <div
-              key={produto.id}
-              style={{
-                border: "1px solid #ddd",
-                borderRadius: "10px",
-                padding: "12px"
-              }}
-            >
-              <strong>{produto.nome}</strong>
-              <p>Preço: R$ {Number(produto.preco || 0).toFixed(2)}</p>
+      {/* LISTA */}
+      <div className="produtos-grid">
+        {produtos.map((p) => (
+          <div className="produto-card" key={p.id}>
+            
+            <h2>{p.nome}</h2>
 
-              <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-                <button type="button" onClick={() => preencherEdicao(produto)}>
-                  Editar
-                </button>
+            <p>💰 R$ {Number(p.preco).toFixed(2)}</p>
+            <p>📦 Estoque: {p.quantidade}</p>
 
-                <button type="button" onClick={() => excluirProduto(produto.id)}>
-                  Excluir
-                </button>
-              </div>
+            <div className="acoes">
+              <button className="btn-excluir" onClick={() => excluir(p.id)}>
+                Excluir
+              </button>
             </div>
-          ))
-        )}
+
+          </div>
+        ))}
       </div>
+
     </div>
   );
 }
