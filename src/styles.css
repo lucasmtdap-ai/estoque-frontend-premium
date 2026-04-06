@@ -1998,3 +1998,32 @@ body {
     font-size: 28px;
   }
 }
+
+.upgrade-box {
+  margin: 20px 0;
+  padding: 20px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #fff0f6, #ffe4ec);
+  border: 1px solid rgba(216, 27, 96, 0.15);
+}
+
+.upgrade-box strong {
+  display: block;
+  color: #c21874;
+  font-size: 18px;
+}
+
+.upgrade-box p {
+  color: #6f4d5f;
+  margin: 10px 0;
+}
+
+.upgrade-box button {
+  background: linear-gradient(135deg, #ff5c93, #d81b60);
+  border: none;
+  padding: 12px 18px;
+  border-radius: 12px;
+  color: white;
+  font-weight: 800;
+  cursor: pointer;
+}
