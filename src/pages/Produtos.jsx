@@ -6,6 +6,7 @@ export default function Produtos() {
   const [nome, setNome] = useState("");
   const [preco, setPreco] = useState("");
   const [custo, setCusto] = useState("");
+  const [estoque, setEstoque] = useState("");
   const [editando, setEditando] = useState(null);
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
@@ -14,7 +15,7 @@ export default function Produtos() {
     try {
       const { data } = await api.get("/produtos");
       setProdutos(data);
-    } catch (err) {
+    } catch {
       setErro("Erro ao carregar produtos");
     }
   }
@@ -32,16 +33,17 @@ export default function Produtos() {
       await api.post("/produtos", {
         nome,
         preco: Number(preco),
-        custo: Number(custo || 0)
+        custo: Number(custo || 0),
+        estoque: Number(estoque || 0)
       });
 
       setNome("");
       setPreco("");
       setCusto("");
+      setEstoque("");
       setSucesso("Produto cadastrado com sucesso");
       carregar();
     } catch (err) {
-      console.error(err);
       setErro(err?.response?.data?.error || "Erro ao cadastrar produto");
     }
   }
@@ -50,8 +52,7 @@ export default function Produtos() {
     try {
       await api.delete(`/produtos/${id}`);
       carregar();
-    } catch (err) {
-      console.error(err);
+    } catch {
       setErro("Erro ao excluir produto");
     }
   }
@@ -61,13 +62,13 @@ export default function Produtos() {
       await api.put(`/produtos/${editando.id}`, {
         nome: editando.nome,
         preco: Number(editando.preco),
-        custo: Number(editando.custo || 0)
+        custo: Number(editando.custo || 0),
+        estoque: Number(editando.estoque || 0)
       });
 
       setEditando(null);
       carregar();
-    } catch (err) {
-      console.error(err);
+    } catch {
       setErro("Erro ao editar produto");
     }
   }
@@ -105,12 +106,20 @@ export default function Produtos() {
           onChange={(e) => setCusto(e.target.value)}
         />
 
+        <input
+          type="number"
+          placeholder="Estoque"
+          value={estoque}
+          onChange={(e) => setEstoque(e.target.value)}
+        />
+
         <button type="submit">Cadastrar</button>
       </form>
 
       <div className="produtos-grid">
         {produtos.map((p) => {
           const lucro = Number(p.preco || 0) - Number(p.custo || 0);
+          const baixo = Number(p.estoque || 0) <= 3;
 
           return (
             <div className="produto-card" key={p.id}>
@@ -118,8 +127,10 @@ export default function Produtos() {
               <p>💰 Venda: R$ {Number(p.preco || 0).toFixed(2)}</p>
               <p>🧾 Custo: R$ {Number(p.custo || 0).toFixed(2)}</p>
               <p>📈 Lucro: R$ {lucro.toFixed(2)}</p>
+              <p>📦 Estoque: {Number(p.estoque || 0)}</p>
 
               {lucro <= 0 && <span className="alerta">⚠ Sem lucro</span>}
+              {baixo && <span className="alerta-estoque">🔴 Estoque baixo</span>}
 
               <div className="acoes">
                 <button type="button" onClick={() => setEditando(p)}>
@@ -162,6 +173,13 @@ export default function Produtos() {
               value={editando.custo || ""}
               onChange={(e) =>
                 setEditando({ ...editando, custo: e.target.value })
+              }
+            />
+
+            <input
+              value={editando.estoque || ""}
+              onChange={(e) =>
+                setEditando({ ...editando, estoque: e.target.value })
               }
             />
 
