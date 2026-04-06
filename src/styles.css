@@ -926,3 +926,23 @@ a {
 .premium-stat-card.green {
   background: linear-gradient(135deg, #2a9d8f 0%, #52b69a 100%);
 }
+
+.filtro-categoria-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0 24px;
+}
+
+.filtro-categoria-wrap label {
+  font-weight: 700;
+  color: #7a4f63;
+}
+
+.filtro-categoria-wrap select {
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  padding: 0 12px;
+  background: white;
+}
