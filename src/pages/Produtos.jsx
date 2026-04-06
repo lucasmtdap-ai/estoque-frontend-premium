@@ -41,6 +41,18 @@ export default function Produtos() {
     setErro("");
     setSucesso("");
 
+    let user = {};
+    try {
+      user = JSON.parse(localStorage.getItem("user") || "{}");
+    } catch {
+      user = {};
+    }
+
+    if ((user.plano || "basico") !== "premium" && produtos.length >= 10) {
+      setErro("Plano básico permite até 10 produtos. Faça upgrade para premium.");
+      return;
+    }
+
     try {
       await api.post("/produtos", {
         nome,
@@ -65,6 +77,7 @@ export default function Produtos() {
   async function excluir(id) {
     try {
       await api.delete(`/produtos/${id}`);
+      setSucesso("Produto excluído com sucesso");
       carregar();
     } catch {
       setErro("Erro ao excluir produto");
@@ -82,6 +95,7 @@ export default function Produtos() {
       });
 
       setEditando(null);
+      setSucesso("Produto atualizado com sucesso");
       carregar();
     } catch {
       setErro("Erro ao editar produto");
