@@ -2,189 +2,163 @@ import React from "react";
 
 export default function LandingPage() {
   return (
-    <div className="landing-page">
-      <section className="landing-hero">
-        <div className="landing-nav">
-          <div className="landing-logo">
-            <div className="landing-logo-icon">RB</div>
-            <div>
-              <strong>Rosa Control</strong>
-              <span>SaaS para lojas</span>
-            </div>
-          </div>
-
-          <div className="landing-nav-actions">
-            <a href="/login" className="landing-btn ghost">
-              Entrar
-            </a>
-            <a href="/register" className="landing-btn primary">
-              Testar agora
-            </a>
+    <div className="landing-container">
+      {/* NAVBAR */}
+      <header className="landing-header">
+        <div className="logo">
+          <div className="logo-icon">RB</div>
+          <div>
+            <strong>Rosa Control</strong>
+            <span>SaaS para lojas</span>
           </div>
         </div>
 
-        <div className="landing-hero-content">
-          <div className="landing-hero-text">
-            <span className="landing-badge">SaaS Premium para varejo</span>
-            <h1>
-              Controle sua loja com um sistema moderno, bonito e fácil de usar.
-            </h1>
-            <p>
-              Gerencie produtos, estoque, vendas, lucro e categorias em um só
-              lugar. Tudo online, rápido e com visual profissional.
-            </p>
+        <div className="nav-actions">
+          <a href="/login" className="btn ghost">Entrar</a>
+          <a href="/register" className="btn primary">Testar agora</a>
+        </div>
+      </header>
 
-            <div className="landing-cta-group">
-              <a href="/register" className="landing-btn primary large">
-                Começar grátis
-              </a>
-              <a href="/login" className="landing-btn ghost large">
-                Já tenho conta
-              </a>
-            </div>
+      {/* HERO */}
+      <section className="hero">
+        <div className="hero-left">
+          <span className="tag">SaaS Premium para varejo</span>
 
-            <div className="landing-mini-stats">
-              <div>
-                <strong>Estoque</strong>
-                <span>inteligente</span>
-              </div>
-              <div>
-                <strong>Vendas</strong>
-                <span>em tempo real</span>
-              </div>
-              <div>
-                <strong>Lucro</strong>
-                <span>automático</span>
-              </div>
-            </div>
+          <h1>
+            Controle sua loja com um sistema moderno,
+            bonito e fácil de usar.
+          </h1>
+
+          <p>
+            Gerencie produtos, estoque, vendas, lucro e categorias em um só lugar.
+            Tudo online, rápido e com visual profissional.
+          </p>
+
+          <div className="hero-buttons">
+            <a href="/register" className="btn primary big">Começar grátis</a>
+            <a href="/login" className="btn ghost big">Já tenho conta</a>
           </div>
 
-          <div className="landing-hero-card">
-            <div className="hero-card-top">
-              <span>Painel premium</span>
-              <strong>Rosa Control</strong>
-            </div>
+          <div className="hero-features">
+            <span>📦 Estoque inteligente</span>
+            <span>💰 Vendas em tempo real</span>
+            <span>📈 Lucro automático</span>
+          </div>
+        </div>
 
-            <div className="hero-card-metrics">
-              <div className="metric-card pink">
-                <small>Produtos</small>
-                <strong>128</strong>
-              </div>
+        {/* MOCKUP */}
+        <div className="hero-right">
+          <div className="card gradient pink">
+            <span>Produtos</span>
+            <strong>128</strong>
+          </div>
 
-              <div className="metric-card purple">
-                <small>Vendas</small>
-                <strong>56</strong>
-              </div>
+          <div className="card gradient purple">
+            <span>Vendas</span>
+            <strong>56</strong>
+          </div>
 
-              <div className="metric-card gold">
-                <small>Lucro</small>
-                <strong>R$ 4.280</strong>
-              </div>
-            </div>
+          <div className="card gradient orange">
+            <span>Lucro</span>
+            <strong>R$ 4.280</strong>
+          </div>
 
-            <div className="hero-card-chart">
-              <div className="fake-bar h1"></div>
-              <div className="fake-bar h2"></div>
-              <div className="fake-bar h3"></div>
-              <div className="fake-bar h4"></div>
-              <div className="fake-bar h5"></div>
-            </div>
+          <div className="bars">
+            <div></div>
+            <div></div>
+            <div className="big"></div>
+            <div></div>
+            <div></div>
           </div>
         </div>
       </section>
 
-      <section className="landing-section">
-        <div className="section-title">
-          <span>Recursos</span>
-          <h2>Tudo que sua loja precisa para operar melhor</h2>
-        </div>
+      {/* RECURSOS */}
+      <section className="features">
+        <h2>Tudo que sua loja precisa para operar melhor</h2>
 
-        <div className="landing-features-grid">
+        <div className="features-grid">
           <div className="feature-card">
             <h3>Controle de produtos</h3>
-            <p>Cadastre, edite e organize todos os produtos em poucos cliques.</p>
+            <p>Cadastre, edite e organize tudo facilmente.</p>
           </div>
 
           <div className="feature-card">
             <h3>Estoque inteligente</h3>
-            <p>Veja alertas de estoque baixo e mantenha sua operação em dia.</p>
+            <p>Saiba exatamente o que entra e sai.</p>
           </div>
 
           <div className="feature-card">
             <h3>Vendas integradas</h3>
-            <p>Registre vendas e baixe o estoque automaticamente.</p>
+            <p>Registre vendas automaticamente.</p>
           </div>
 
           <div className="feature-card">
             <h3>Lucro automático</h3>
-            <p>Saiba quanto está lucrando com base no preço e no custo.</p>
+            <p>Veja quanto está ganhando em tempo real.</p>
           </div>
 
           <div className="feature-card">
             <h3>Dashboard premium</h3>
-            <p>Tenha visão clara de produtos, vendas e indicadores importantes.</p>
+            <p>Visual moderno e profissional.</p>
           </div>
 
           <div className="feature-card">
-            <h3>Categorias e organização</h3>
-            <p>Separe sua loja por categorias e encontre tudo mais rápido.</p>
+            <h3>Categorias</h3>
+            <p>Organize sua loja facilmente.</p>
           </div>
         </div>
       </section>
 
-      <section className="landing-section soft">
-        <div className="section-title">
-          <span>Planos</span>
-          <h2>Escolha o plano ideal para seu momento</h2>
-        </div>
+      {/* PLANOS */}
+      <section className="pricing">
+        <h2>Escolha o plano ideal</h2>
 
         <div className="pricing-grid">
           <div className="pricing-card">
             <h3>Básico</h3>
             <div className="price">R$ 29<span>/mês</span></div>
+
             <ul>
-              <li>Cadastro de produtos</li>
-              <li>Controle de estoque</li>
-              <li>Registro de vendas</li>
-              <li>Dashboard principal</li>
+              <li>Produtos</li>
+              <li>Estoque</li>
+              <li>Vendas</li>
+              <li>Dashboard</li>
             </ul>
-            <a href="/register" className="landing-btn ghost full">
+
+            <a href="/register" className="btn ghost full">
               Começar
             </a>
           </div>
 
           <div className="pricing-card featured">
-            <div className="featured-badge">Mais escolhido</div>
+            <span className="badge">Mais escolhido</span>
+
             <h3>Premium</h3>
             <div className="price">R$ 59<span>/mês</span></div>
+
             <ul>
-              <li>Tudo do plano básico</li>
+              <li>Tudo do básico</li>
               <li>Relatórios avançados</li>
-              <li>Lucro e métricas completas</li>
+              <li>Lucro completo</li>
               <li>Visual premium</li>
-              <li>Prioridade nas melhorias</li>
             </ul>
-            <a href="/register" className="landing-btn primary full">
+
+            <a href="/register" className="btn primary full">
               Testar premium
             </a>
           </div>
         </div>
       </section>
 
-      <section className="landing-cta-final">
-        <div className="cta-final-card">
-          <h2>Pronto para profissionalizar sua loja?</h2>
-          <p>
-            Comece agora e tenha controle total sobre produtos, estoque, vendas e lucro.
-          </p>
-          <div className="landing-cta-group center">
-            <a href="/register" className="landing-btn primary large">
-              Criar conta
-            </a>
-            <a href="/login" className="landing-btn ghost large">
-              Entrar no sistema
-            </a>
-          </div>
+      {/* CTA FINAL */}
+      <section className="cta">
+        <h2>Pronto para profissionalizar sua loja?</h2>
+        <p>Comece agora e tenha controle total do seu negócio.</p>
+
+        <div className="cta-buttons">
+          <a href="/register" className="btn primary">Criar conta</a>
+          <a href="/login" className="btn ghost">Entrar</a>
         </div>
       </section>
     </div>
