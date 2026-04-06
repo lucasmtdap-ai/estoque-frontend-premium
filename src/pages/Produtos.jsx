@@ -7,10 +7,16 @@ export default function Produtos() {
   const [preco, setPreco] = useState("");
   const [custo, setCusto] = useState("");
   const [editando, setEditando] = useState(null);
+  const [erro, setErro] = useState("");
+  const [sucesso, setSucesso] = useState("");
 
   async function carregar() {
-    const { data } = await api.get("/produtos");
-    setProdutos(data);
+    try {
+      const { data } = await api.get("/produtos");
+      setProdutos(data);
+    } catch (err) {
+      setErro("Erro ao carregar produtos");
+    }
   }
 
   useEffect(() => {
@@ -19,41 +25,63 @@ export default function Produtos() {
 
   async function cadastrar(e) {
     e.preventDefault();
+    setErro("");
+    setSucesso("");
 
-    await api.post("/produtos", {
-      nome,
-      preco: Number(preco),
-      custo: Number(custo || 0)
-    });
+    try {
+      await api.post("/produtos", {
+        nome,
+        preco: Number(preco),
+        custo: Number(custo || 0)
+      });
 
-    setNome("");
-    setPreco("");
-    setCusto("");
-    carregar();
+      setNome("");
+      setPreco("");
+      setCusto("");
+      setSucesso("Produto cadastrado com sucesso");
+      carregar();
+    } catch (err) {
+      console.error(err);
+      setErro(err?.response?.data?.error || "Erro ao cadastrar produto");
+    }
   }
 
   async function excluir(id) {
-    await api.delete(`/produtos/${id}`);
-    carregar();
+    try {
+      await api.delete(`/produtos/${id}`);
+      carregar();
+    } catch (err) {
+      console.error(err);
+      setErro("Erro ao excluir produto");
+    }
   }
 
   async function salvarEdicao() {
-    await api.put(`/produtos/${editando.id}`, {
-      nome: editando.nome,
-      preco: Number(editando.preco),
-      custo: Number(editando.custo || 0)
-    });
+    try {
+      await api.put(`/produtos/${editando.id}`, {
+        nome: editando.nome,
+        preco: Number(editando.preco),
+        custo: Number(editando.custo || 0)
+      });
 
-    setEditando(null);
-    carregar();
+      setEditando(null);
+      carregar();
+    } catch (err) {
+      console.error(err);
+      setErro("Erro ao editar produto");
+    }
   }
 
   return (
     <div className="produtos-container">
       <h1>Produtos</h1>
 
+      {erro ? <p style={{ color: "red", fontWeight: "bold" }}>{erro}</p> : null}
+      {sucesso ? <p style={{ color: "green", fontWeight: "bold" }}>{sucesso}</p> : null}
+
       <form onSubmit={cadastrar} className="produto-form">
         <input
+          type="text"
           placeholder="Nome do produto"
           value={nome}
           onChange={(e) => setNome(e.target.value)}
@@ -61,6 +89,8 @@ export default function Produtos() {
         />
 
         <input
+          type="number"
+          step="0.01"
           placeholder="Preço de venda"
           value={preco}
           onChange={(e) => setPreco(e.target.value)}
@@ -68,6 +98,8 @@ export default function Produtos() {
         />
 
         <input
+          type="number"
+          step="0.01"
           placeholder="Custo do produto"
           value={custo}
           onChange={(e) => setCusto(e.target.value)}
