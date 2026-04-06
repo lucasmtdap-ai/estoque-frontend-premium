@@ -1,7 +1,13 @@
 import React from "react";
 
 export default function Topbar() {
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  let user = {};
+
+  try {
+    user = JSON.parse(localStorage.getItem("user") || "{}");
+  } catch {
+    user = {};
+  }
 
   return (
     <header className="topbar">
