@@ -37,15 +37,14 @@ export default function Dashboard() {
   const totalProdutos = produtos.length;
 
   const valorTotal = useMemo(() => {
-    return produtos.reduce((total, p) => {
-      return total + Number(p.preco || 0);
-    }, 0);
+    return produtos.reduce((total, p) => total + Number(p.preco || 0), 0);
   }, [produtos]);
 
   const lucroTotal = useMemo(() => {
-    return produtos.reduce((total, p) => {
-      return total + (Number(p.preco || 0) - Number(p.custo || 0));
-    }, 0);
+    return produtos.reduce(
+      (total, p) => total + (Number(p.preco || 0) - Number(p.custo || 0)),
+      0
+    );
   }, [produtos]);
 
   const estoqueBaixo = useMemo(() => {
@@ -55,31 +54,21 @@ export default function Dashboard() {
   const totalVendas = vendas.length;
 
   const valorVendido = useMemo(() => {
-    return vendas.reduce((total, v) => {
-      return total + Number(v.valor_total || 0);
-    }, 0);
+    return vendas.reduce((total, v) => total + Number(v.valor_total || 0), 0);
   }, [vendas]);
 
-  const ultimasVendas = useMemo(() => {
-    return vendas.slice(0, 5);
-  }, [vendas]);
-
-  const topProdutos = useMemo(() => {
+  const categoriasResumo = useMemo(() => {
     const mapa = {};
-
-    vendas.forEach((v) => {
-      const nome = v.produto_nome || "Produto";
-      if (!mapa[nome]) {
-        mapa[nome] = 0;
-      }
-      mapa[nome] += Number(v.quantidade || 0);
+    produtos.forEach((p) => {
+      const cat = p.categoria || "Sem categoria";
+      if (!mapa[cat]) mapa[cat] = 0;
+      mapa[cat] += 1;
     });
 
     return Object.entries(mapa)
-      .map(([nome, quantidade]) => ({ nome, quantidade }))
-      .sort((a, b) => b.quantidade - a.quantidade)
-      .slice(0, 5);
-  }, [vendas]);
+      .map(([categoria, quantidade]) => ({ categoria, quantidade }))
+      .sort((a, b) => b.quantidade - a.quantidade);
+  }, [produtos]);
 
   return (
     <div className="premium-dashboard">
@@ -88,7 +77,7 @@ export default function Dashboard() {
           <span className="hero-badge">Painel inteligente</span>
           <h1 className="hero-title">Dashboard Premium</h1>
           <p className="hero-subtitle">
-            Acompanhe produtos, lucro, estoque e vendas em tempo real.
+            Acompanhe produtos, lucro, estoque, vendas e categorias em tempo real.
           </p>
         </div>
 
@@ -103,91 +92,61 @@ export default function Dashboard() {
         <div className="premium-stat-card pink">
           <div className="stat-label">Total de produtos</div>
           <div className="stat-value">{totalProdutos}</div>
-          <div className="stat-note">Itens cadastrados no sistema</div>
         </div>
 
         <div className="premium-stat-card purple">
           <div className="stat-label">Valor total</div>
           <div className="stat-value">R$ {valorTotal.toFixed(2)}</div>
-          <div className="stat-note">Soma dos preços de venda</div>
         </div>
 
         <div className="premium-stat-card gold">
           <div className="stat-label">Lucro total</div>
           <div className="stat-value">R$ {lucroTotal.toFixed(2)}</div>
-          <div className="stat-note">Venda menos custo</div>
         </div>
 
         <div className="premium-stat-card red">
           <div className="stat-label">Estoque baixo</div>
           <div className="stat-value">{estoqueBaixo}</div>
-          <div className="stat-note">Produtos com estoque menor ou igual a 3</div>
         </div>
-      </div>
 
-      <div className="premium-cards-grid" style={{ marginTop: "18px" }}>
         <div className="premium-stat-card blue">
           <div className="stat-label">Total de vendas</div>
           <div className="stat-value">{totalVendas}</div>
-          <div className="stat-note">Vendas registradas no sistema</div>
         </div>
 
         <div className="premium-stat-card green">
           <div className="stat-label">Valor vendido</div>
           <div className="stat-value">R$ {valorVendido.toFixed(2)}</div>
-          <div className="stat-note">Soma total das vendas</div>
         </div>
       </div>
 
-      <div className="premium-dashboard-grid">
+      <div className="premium-dashboard-grid" style={{ marginTop: "20px" }}>
         <section className="premium-panel">
           <div className="panel-header">
-            <h2>Resumo da operação</h2>
-            <p>Visão geral do seu sistema</p>
+            <h2>Resumo por categoria</h2>
+            <p>Organização dos seus produtos</p>
           </div>
 
-          <div className="summary-list">
-            <div className="summary-row">
-              <span>Loja</span>
-              <strong>{user?.loja || "Rosa Boutique"}</strong>
+          {categoriasResumo.length === 0 ? (
+            <div className="empty-chart">
+              <p>Nenhuma categoria cadastrada ainda.</p>
             </div>
-
-            <div className="summary-row">
-              <span>Produtos cadastrados</span>
-              <strong>{totalProdutos}</strong>
+          ) : (
+            <div className="summary-list">
+              {categoriasResumo.map((item) => (
+                <div className="summary-row" key={item.categoria}>
+                  <span>{item.categoria}</span>
+                  <strong>{item.quantidade} produtos</strong>
+                </div>
+              ))}
             </div>
-
-            <div className="summary-row">
-              <span>Valor total em cadastro</span>
-              <strong>R$ {valorTotal.toFixed(2)}</strong>
-            </div>
-
-            <div className="summary-row">
-              <span>Lucro total estimado</span>
-              <strong>R$ {lucroTotal.toFixed(2)}</strong>
-            </div>
-
-            <div className="summary-row">
-              <span>Itens com estoque baixo</span>
-              <strong>{estoqueBaixo}</strong>
-            </div>
-
-            <div className="summary-row">
-              <span>Total de vendas</span>
-              <strong>{totalVendas}</strong>
-            </div>
-
-            <div className="summary-row">
-              <span>Valor vendido</span>
-              <strong>R$ {valorVendido.toFixed(2)}</strong>
-            </div>
-          </div>
+          )}
         </section>
 
         <section className="premium-panel">
           <div className="panel-header">
             <h2>Alertas</h2>
-            <p>Produtos que precisam de atenção</p>
+            <p>Itens com estoque baixo</p>
           </div>
 
           {estoqueBaixo === 0 ? (
@@ -204,56 +163,6 @@ export default function Dashboard() {
                     <strong>Estoque: {Number(p.estoque || 0)}</strong>
                   </div>
                 ))}
-            </div>
-          )}
-        </section>
-      </div>
-
-      <div className="premium-dashboard-grid" style={{ marginTop: "20px" }}>
-        <section className="premium-panel">
-          <div className="panel-header">
-            <h2>Últimas vendas</h2>
-            <p>Histórico recente</p>
-          </div>
-
-          {ultimasVendas.length === 0 ? (
-            <div className="empty-chart">
-              <p>Nenhuma venda registrada ainda.</p>
-            </div>
-          ) : (
-            <div className="summary-list">
-              {ultimasVendas.map((v) => (
-                <div className="summary-row" key={v.id}>
-                  <span>
-                    {v.produto_nome} × {v.quantidade}
-                  </span>
-                  <strong>R$ {Number(v.valor_total || 0).toFixed(2)}</strong>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section className="premium-panel">
-          <div className="panel-header">
-            <h2>Top produtos</h2>
-            <p>Mais vendidos</p>
-          </div>
-
-          {topProdutos.length === 0 ? (
-            <div className="empty-chart">
-              <p>Sem vendas suficientes para montar ranking.</p>
-            </div>
-          ) : (
-            <div className="summary-list">
-              {topProdutos.map((p, index) => (
-                <div className="summary-row" key={p.nome}>
-                  <span>
-                    #{index + 1} {p.nome}
-                  </span>
-                  <strong>{p.quantidade} vendidos</strong>
-                </div>
-              ))}
             </div>
           )}
         </section>
