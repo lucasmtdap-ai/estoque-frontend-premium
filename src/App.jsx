@@ -4,6 +4,7 @@ import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Produtos from "./pages/Produtos.jsx";
+import Vendas from "./pages/Vendas.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AppLayout from "./layout/AppLayout.jsx";
 
@@ -24,6 +25,7 @@ export default function App() {
         >
           <Route index element={<Dashboard />} />
           <Route path="produtos" element={<Produtos />} />
+          <Route path="vendas" element={<Vendas />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/login" replace />} />
@@ -31,4 +33,3 @@ export default function App() {
     </BrowserRouter>
   );
 }
-    
