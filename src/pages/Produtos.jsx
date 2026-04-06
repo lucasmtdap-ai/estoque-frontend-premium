@@ -5,7 +5,7 @@ export default function Produtos() {
   const [produtos, setProdutos] = useState([]);
   const [nome, setNome] = useState("");
   const [preco, setPreco] = useState("");
-
+  const [custo, setCusto] = useState("");
   const [editando, setEditando] = useState(null);
 
   async function carregar() {
@@ -20,10 +20,15 @@ export default function Produtos() {
   async function cadastrar(e) {
     e.preventDefault();
 
-    await api.post("/produtos", { nome, preco });
+    await api.post("/produtos", {
+      nome,
+      preco: Number(preco),
+      custo: Number(custo || 0)
+    });
 
     setNome("");
     setPreco("");
+    setCusto("");
     carregar();
   }
 
@@ -35,7 +40,8 @@ export default function Produtos() {
   async function salvarEdicao() {
     await api.put(`/produtos/${editando.id}`, {
       nome: editando.nome,
-      preco: editando.preco
+      preco: Number(editando.preco),
+      custo: Number(editando.custo || 0)
     });
 
     setEditando(null);
@@ -46,7 +52,6 @@ export default function Produtos() {
     <div className="produtos-container">
       <h1>Produtos</h1>
 
-      {/* FORM */}
       <form onSubmit={cadastrar} className="produto-form">
         <input
           placeholder="Nome do produto"
@@ -56,39 +61,45 @@ export default function Produtos() {
         />
 
         <input
-          placeholder="Preço"
+          placeholder="Preço de venda"
           value={preco}
           onChange={(e) => setPreco(e.target.value)}
           required
         />
 
+        <input
+          placeholder="Custo"
+          value={custo}
+          onChange={(e) => setCusto(e.target.value)}
+        />
+
         <button type="submit">Cadastrar</button>
       </form>
 
-      {/* LISTA */}
       <div className="produtos-grid">
-        {produtos.map((p) => (
-          <div className="produto-card" key={p.id}>
-            <h2>{p.nome}</h2>
-            <p>💰 R$ {Number(p.preco).toFixed(2)}</p>
+        {produtos.map((p) => {
+          const lucro = Number(p.preco || 0) - Number(p.custo || 0);
 
-            {/* ALERTA VISUAL (simples) */}
-            {Number(p.preco) < 20 && (
-              <span className="alerta">⚠ Produto barato</span>
-            )}
+          return (
+            <div className="produto-card" key={p.id}>
+              <h2>{p.nome}</h2>
+              <p>💰 Venda: R$ {Number(p.preco).toFixed(2)}</p>
+              <p>🧾 Custo: R$ {Number(p.custo || 0).toFixed(2)}</p>
+              <p>📈 Lucro: R$ {lucro.toFixed(2)}</p>
 
-            <div className="acoes">
-              <button onClick={() => setEditando(p)}>Editar</button>
+              {lucro <= 0 && <span className="alerta">⚠ Sem lucro</span>}
 
-              <button className="btn-excluir" onClick={() => excluir(p.id)}>
-                Excluir
-              </button>
+              <div className="acoes">
+                <button onClick={() => setEditando(p)}>Editar</button>
+                <button className="btn-excluir" onClick={() => excluir(p.id)}>
+                  Excluir
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      {/* MODAL */}
       {editando && (
         <div className="modal">
           <div className="modal-content">
@@ -108,12 +119,16 @@ export default function Produtos() {
               }
             />
 
+            <input
+              value={editando.custo || ""}
+              onChange={(e) =>
+                setEditando({ ...editando, custo: e.target.value })
+              }
+            />
+
             <div className="modal-actions">
               <button onClick={salvarEdicao}>Salvar</button>
-
-              <button onClick={() => setEditando(null)}>
-                Cancelar
-              </button>
+              <button onClick={() => setEditando(null)}>Cancelar</button>
             </div>
           </div>
         </div>
