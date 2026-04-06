@@ -2,7 +2,13 @@ import React, { useEffect, useState } from "react";
 import api from "../services/api.js";
 
 export default function Dashboard() {
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const user = let user = {};
+
+try {
+  user = JSON.parse(localStorage.getItem("user") || "{}");
+} catch {
+  user = {};
+  }
   const [produtos, setProdutos] = useState([]);
 
   useEffect(() => {
