@@ -5,7 +5,8 @@ export default function Produtos() {
   const [produtos, setProdutos] = useState([]);
   const [nome, setNome] = useState("");
   const [preco, setPreco] = useState("");
-  const [quantidade, setQuantidade] = useState("");
+
+  const [editando, setEditando] = useState(null);
 
   async function carregar() {
     const { data } = await api.get("/produtos");
@@ -19,15 +20,10 @@ export default function Produtos() {
   async function cadastrar(e) {
     e.preventDefault();
 
-    await api.post("/produtos", {
-      nome,
-      preco,
-      quantidade
-    });
+    await api.post("/produtos", { nome, preco });
 
     setNome("");
     setPreco("");
-    setQuantidade("");
     carregar();
   }
 
@@ -36,9 +32,18 @@ export default function Produtos() {
     carregar();
   }
 
+  async function salvarEdicao() {
+    await api.put(`/produtos/${editando.id}`, {
+      nome: editando.nome,
+      preco: editando.preco
+    });
+
+    setEditando(null);
+    carregar();
+  }
+
   return (
     <div className="produtos-container">
-
       <h1>Produtos</h1>
 
       {/* FORM */}
@@ -57,13 +62,6 @@ export default function Produtos() {
           required
         />
 
-        <input
-          placeholder="Quantidade"
-          value={quantidade}
-          onChange={(e) => setQuantidade(e.target.value)}
-          required
-        />
-
         <button type="submit">Cadastrar</button>
       </form>
 
@@ -71,22 +69,55 @@ export default function Produtos() {
       <div className="produtos-grid">
         {produtos.map((p) => (
           <div className="produto-card" key={p.id}>
-            
             <h2>{p.nome}</h2>
-
             <p>💰 R$ {Number(p.preco).toFixed(2)}</p>
-            <p>📦 Estoque: {p.quantidade}</p>
+
+            {/* ALERTA VISUAL (simples) */}
+            {Number(p.preco) < 20 && (
+              <span className="alerta">⚠ Produto barato</span>
+            )}
 
             <div className="acoes">
+              <button onClick={() => setEditando(p)}>Editar</button>
+
               <button className="btn-excluir" onClick={() => excluir(p.id)}>
                 Excluir
               </button>
             </div>
-
           </div>
         ))}
       </div>
 
+      {/* MODAL */}
+      {editando && (
+        <div className="modal">
+          <div className="modal-content">
+            <h2>Editar Produto</h2>
+
+            <input
+              value={editando.nome}
+              onChange={(e) =>
+                setEditando({ ...editando, nome: e.target.value })
+              }
+            />
+
+            <input
+              value={editando.preco}
+              onChange={(e) =>
+                setEditando({ ...editando, preco: e.target.value })
+              }
+            />
+
+            <div className="modal-actions">
+              <button onClick={salvarEdicao}>Salvar</button>
+
+              <button onClick={() => setEditando(null)}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
