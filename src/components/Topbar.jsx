@@ -3,11 +3,11 @@ import React from "react";
 export default function Topbar() {
   let user = {};
 
-  try {
-    user = JSON.parse(localStorage.getItem("user") || "{}");
-  } catch {
-    user = {};
-  }
+try {
+  user = JSON.parse(localStorage.getItem("user") || "{}");
+} catch {
+  user = {};
+}
 
   return (
     <header className="topbar">
