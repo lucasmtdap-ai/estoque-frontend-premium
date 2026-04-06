@@ -1,66 +1,78 @@
 import React, { useEffect, useState } from "react";
-import api from "../services/api.js";
+import api from "../services/api";
 
 export default function Dashboard() {
-const [user, setUser] = useState({});
-
-useEffect(() => {
-  try {
-    const data = JSON.parse(localStorage.getItem("user") || "{}");
-    setUser(data);
-  } catch {
-    setUser({});
-  }
-}, []);
+  const [user, setUser] = useState({});
   const [produtos, setProdutos] = useState([]);
 
+  // carregar usuário
+  useEffect(() => {
+    try {
+      const data = JSON.parse(localStorage.getItem("user") || "{}");
+      setUser(data);
+    } catch {
+      setUser({});
+    }
+  }, []);
+
+  // carregar produtos
   useEffect(() => {
     async function carregar() {
       try {
         const { data } = await api.get("/produtos");
         setProdutos(data);
-      } catch {
-        setProdutos([]);
+      } catch (err) {
+        console.log("Erro ao carregar produtos");
       }
     }
 
     carregar();
   }, []);
 
+  // calcular total
   const totalProdutos = produtos.length;
-  const valorEstoque = produtos.reduce(
-    (acc, p) => acc + Number(p.preco || 0),
-    0
-  );
+
+  // calcular valor total
+  const valorTotal = produtos.reduce((total, p) => {
+    return total + Number(p.preco || 0);
+  }, 0);
 
   return (
-    <div>
-      <div className="cards-grid">
-        <div className="dashboard-card">
-          <span>Total de produtos</span>
-          <h3>{totalProdutos}</h3>
-          <p>Itens cadastrados no sistema</p>
+    <div style={{ padding: 30 }}>
+      <h1>Painel</h1>
+      <p>{user?.nome || "Usuário"}</p>
+
+      <div style={{ display: "flex", gap: 20, marginTop: 20 }}>
+        
+        <div style={card}>
+          <h3>Total de produtos</h3>
+          <p>{totalProdutos}</p>
         </div>
 
-        <div className="dashboard-card">
-          <span>Valor total</span>
-          <h3>R$ {valorEstoque.toFixed(2)}</h3>
-          <p>Soma dos produtos cadastrados</p>
+        <div style={card}>
+          <h3>Valor total</h3>
+          <p>R$ {valorTotal.toFixed(2)}</p>
         </div>
 
-        <div className="dashboard-card">
-          <span>Usuário</span>
-          <h3>{user?.nome || "Usuário"}</h3>
-          <p>Conta conectada ao painel</p>
+        <div style={card}>
+          <h3>Usuário</h3>
+          <p>{user?.email || "Sem login"}</p>
         </div>
+
       </div>
 
-      <div className="dashboard-panel">
+      <div style={{ marginTop: 40 }}>
         <h2>Bem-vindo ao sistema</h2>
-        <p>
-          Seu SaaS já está com login, dashboard e CRUD mínimo funcionando.
-        </p>
+        <p>Seu SaaS está funcionando com dados reais 🚀</p>
       </div>
     </div>
   );
 }
+
+const card = {
+  background: "#fff",
+  padding: 20,
+  borderRadius: 10,
+  boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+  minWidth: 200,
+};
