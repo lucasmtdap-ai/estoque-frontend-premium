@@ -918,3 +918,11 @@ a {
   margin-top: 0;
   color: #c21874;
 }
+
+.premium-stat-card.blue {
+  background: linear-gradient(135deg, #3a86ff 0%, #5aa9ff 100%);
+}
+
+.premium-stat-card.green {
+  background: linear-gradient(135deg, #2a9d8f 0%, #52b69a 100%);
+}
