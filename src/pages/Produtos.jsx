@@ -68,7 +68,7 @@ export default function Produtos() {
         />
 
         <input
-          placeholder="Custo"
+          placeholder="Custo do produto"
           value={custo}
           onChange={(e) => setCusto(e.target.value)}
         />
@@ -83,15 +83,22 @@ export default function Produtos() {
           return (
             <div className="produto-card" key={p.id}>
               <h2>{p.nome}</h2>
-              <p>💰 Venda: R$ {Number(p.preco).toFixed(2)}</p>
+              <p>💰 Venda: R$ {Number(p.preco || 0).toFixed(2)}</p>
               <p>🧾 Custo: R$ {Number(p.custo || 0).toFixed(2)}</p>
               <p>📈 Lucro: R$ {lucro.toFixed(2)}</p>
 
               {lucro <= 0 && <span className="alerta">⚠ Sem lucro</span>}
 
               <div className="acoes">
-                <button onClick={() => setEditando(p)}>Editar</button>
-                <button className="btn-excluir" onClick={() => excluir(p.id)}>
+                <button type="button" onClick={() => setEditando(p)}>
+                  Editar
+                </button>
+
+                <button
+                  type="button"
+                  className="btn-excluir"
+                  onClick={() => excluir(p.id)}
+                >
                   Excluir
                 </button>
               </div>
@@ -127,8 +134,13 @@ export default function Produtos() {
             />
 
             <div className="modal-actions">
-              <button onClick={salvarEdicao}>Salvar</button>
-              <button onClick={() => setEditando(null)}>Cancelar</button>
+              <button type="button" onClick={salvarEdicao}>
+                Salvar
+              </button>
+
+              <button type="button" onClick={() => setEditando(null)}>
+                Cancelar
+              </button>
             </div>
           </div>
         </div>
