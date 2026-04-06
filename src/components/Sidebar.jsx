@@ -2,13 +2,13 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 
 export default function Sidebar() {
- let user = {};
+  let user = {};
 
-try {
-  user = JSON.parse(localStorage.getItem("user") || "{}");
-} catch {
-  user = {};
-}
+  try {
+    user = JSON.parse(localStorage.getItem("user") || "{}");
+  } catch {
+    user = {};
+  }
 
   function sair() {
     localStorage.removeItem("token");
@@ -31,6 +31,10 @@ try {
 
           <NavLink to="/produtos" className="nav-link">
             Produtos
+          </NavLink>
+
+          <NavLink to="/vendas" className="nav-link">
+            Vendas
           </NavLink>
         </nav>
       </div>
